@@ -1,0 +1,24 @@
+## メモ
+
+# テーマ情報と使用発話情報
+# クラスの情報はいらない
+path_theme_info=/Users/kaldi/Desktop/Nh-chat/1902themeInfo/1902MMcorpus_theme_2001.csv
+
+# ここにはagent_utteranceとcls(string)の情報が入っていればいい
+path_utterance_by_class_named=/Users/kaldi/Desktop/Nh-chat/200109_cls8/200109_cls8_bycls_named.csv
+
+# action情報
+path_class_name=/Users/kaldi/Desktop/Nh-chat/refData/200109_cls8_DAname.csv
+
+# クラス数
+class_num=8
+
+# 使用テーマ情報
+path_using_theme=/Users/kaldi/Desktop/Nh-chat/refData/usingTheme.txt
+
+# 簡易的対話行為の記述ファイル
+path_simple_da=/Users/kaldi/Desktop/Nh-chat/refData/simpleDA.csv
+
+
+# システム発話の対話行為（心象推定用）の情報が入ったファイル
+path_da_for_UIpred=/Users/kaldi/Desktop/Nh-chat/refData/dialogue_act_1902.csv
