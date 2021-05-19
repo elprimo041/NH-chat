@@ -36,6 +36,7 @@ class NHChat(AbstractChat):
 	def __init__(self, model="200117_c099", mode="WebCamera", user="tmp_user",\
 		 turn_num=3, text=True, ASR_module="Google"):
 		super().__init__(text=text, ASR_module=ASR_module)
+		self.base_time = time.time()
 		self.mode = mode
 		self.env = DialogueEnv()
 		self.record = Record()
@@ -66,7 +67,9 @@ class NHChat(AbstractChat):
 		file_name = 'data/{}/{}_{}'.format(self.user, self.user, str(self.current_turn).zfill(3))
 		sys_start = time.time() - self.base_time
 		print('sys_start : {:.4}'.format(sys_start))
+		self.save_log(sys_utt)
 		self.mmd.say(sys_utt)
+		self.save_log("*")
 		sys_end = time.time() - self.base_time
 		print('sys_end : {:.4}'.format(sys_end))
 
@@ -168,6 +171,25 @@ class NHChat(AbstractChat):
 
 	def predict_face(self):
 		self.f_pred = np.random.randint(3.5, 4.6)
+
+	def record_log(self, utt):
+		def format_time():
+			t = datetime.datetime.now()
+			s = t.strftime('%Y-%m-%dT%H:%M:%S.%f')
+			tail = s[-7:]
+			f = round(float(tail), 3)
+			temp = "%.3f" % f
+			return "%s%s" % (s[:-7], temp[1:])
+		elapsed = round(time.time() - self.base_time, 3)
+		self.log.append("{}, {}, {}".format(format_time(), elapsed, utt)
+
+	def save_log(self):
+		now = datetime.datetime.now()
+		fp = "log/{}.csv".format(self.user)
+		with open(fp, "w", encoding="utf-8") as f:
+			w = csv.writer(f)
+			for l in self.log:
+				w.writerow(l)
 
 class Record:
 
@@ -397,7 +419,7 @@ class OpenFace:
 def main():
 	nh = NHChat(mode="WebCamera")
 	nh.run()
-	print("end")
+	print("test")
 	# openface_test()
 	# record_test()
 
