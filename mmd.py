@@ -18,23 +18,15 @@ class AbstractChat:
 	def __init__(self, text = False, ASR_module="Julius"):
 		host = "%s" % gethostname()
 		self.text = text
-		self.path = {}		
-		self.read_path()
 		self.is_save_log = True
 		self.log = []
 		self.utt_num = 1
-		self.mmd = MMDAgent(host, 39390, self.path["MMDAgent"])
+		self.mmd = MMDAgent()
 		if ASR_module == "Julius":
 			self.asr = SpeechRecognitionManager.JuliusASR(host, 10500)
 		elif ASR_module == "Google":
 			print("connect to Google ASR")
 			self.asr = SpeechRecognitionManager.GoogleASR()
-
-	def read_path(self):
-		with open("refData/path.csv") as f:
-			reader = csv.reader(f)
-			for row in reader:
-				self.path[row[0]] = row[1]
 
 	def record_log(self, utt_num, spoke, utt):
 		self.log.append([utt_num, spoke, utt])
@@ -98,37 +90,54 @@ class AbstractChat:
 class MMDAgent(AbstractCommunicator):
 
 
-	def __init__(self, host, port, mmd_path, log_file="log/{}"):
-		super(MMDAgent, self).__init__(host, port)
+	def __init__(self, log_file="log/{}"):
+		host = "%s" % gethostname()
+		super(MMDAgent, self).__init__(host, 39390)
 		self.debug = True
 		kill_task("MMDAgent")
-		self.mmd_path = mmd_path
+		self.mmd_path = ""
+		with open("refData/path.csv") as f:
+			reader = csv.reader(f)
+			for row in reader:
+				if row[0] == "MMDAgent":
+					self.mmd_path = row[1]
+					break
+		if self.mmd_path == "":
+			raise Exception("MMDAgent path undefined")
 		cmd_run_mmda = "{}/MMDAgent.exe {}/MMDAgent_Example.mdf"\
 			.format(self.mmd_path, self.mmd_path)
 		# run MMDAgent
 		self.p = subprocess.Popen(cmd_run_mmda.split(" "))
 		self.printDebug("activate MMDAgent")
 		# connect MMdagent server
-		start = time.time()
+		start_time = time.time()
 		while True:
-			self.start()
+			try:
+				self.start()
+			except ConnectionRefusedError:
+				pass
 			if self.client.connected == True:
 				break
-			if time.time() - start > 15:
+			if time.time() - start_time > 15:
 				raise Exception("Time Out:MMDAgentとの接続に時間がかかりすぎています")
 		self.printDebug("connect to MMDAgent")
 		time.sleep(3)
 		self.is_speaking = False
 		self.base_time = time.time()
-		self.debug=False
+
+		self.speak_start_command_time = None
+		self.speak_end_command_time = None
+
 
 	def printDebug(self, message):
 		if self.debug:
 			print(message)
 
 	def say(self, speech):
+		# self.debug = True
 		command =  'SYNTH_START|mei|mei_voice_normal|{}'.format(speech)
 		self.is_speaking = True
+		print("command send")
 		self.sendLine(command, "shift_jis")
 		while self.is_speaking:
 			pass
@@ -150,15 +159,21 @@ class MMDAgent(AbstractCommunicator):
 				print("expression file is not found:{}".format(expression))
 
 	def onReceived(self, message):
-		# print(message)
+		self.printDebug("====================================")
+		self.printDebug(message)
+		self.printDebug("====================================")
 		if "RECOG_EVENT_START" in message:
 			self.printDebug("音声認識開始")
 		elif "RECOG_EVENT_STOP" in message:
 			self.printDebug("音声認識終了")
-		if "SYNTH_EVENT_START" in message:
+		elif "SYNTH_EVENT_START" in message:
 			self.printDebug("音声合成開始")
+			# print("音声合成開始")
+			self.speak_start_command_time = time.time()
 		elif "SYNTH_EVENT_STOP" in message:
 			self.printDebug("音声合成終了")
+			# print("音声合成終了")
+			self.speak_end_command_time = time.time()
 			self.is_speaking = False
 		elif "LIPSYNC_EVENT_START" in message:
 			self.printDebug("唇開始")
