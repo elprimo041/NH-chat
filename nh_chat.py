@@ -181,7 +181,7 @@ class NHChat(AbstractChat):
 			temp = "%.3f" % f
 			return "%s%s" % (s[:-7], temp[1:])
 		elapsed = round(time.time() - self.base_time, 3)
-		self.log.append("{}, {}, {}".format(format_time(), elapsed, utt)
+		self.log.append("{}, {}, {}".format(format_time(), elapsed, utt))
 
 	def save_log(self):
 		now = datetime.datetime.now()
