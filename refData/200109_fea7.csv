@@ -1,8 +1,0 @@
-feature,norm,weight
-default,-,1
-depend_word,-,2
-nod_word,-,2
-thank_word,-,2
-questionmark,-,2
-lenS,norm,2
-UI3average,norm,1
