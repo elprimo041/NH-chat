@@ -1,0 +1,5 @@
+MMDAgent,../../tools/MMDAgent_win32-1.4/MMDAgent_win32-1.4,MMDAgent.exeがあるフォルダ
+MMDExample,../../tools/MMDAgent_Example-1.4/MMDAgent_Example-1.4,MMDAgent_Example.mdfがあるフォルダ
+OpenFace,../../tools/OpenFace_2.2.0_win_x64/OpenFace_2.2.0_win_x64,FaceLandmarkImg.exeがあるフォルダ
+openSMILE,../../tools/opensmile-3.0-win-x64/opensmile-3.0-win-x64,"bin,configフォルダのあるフォルダ"
+julius,../../tools/dictation-kit-4.5/dictation-kit-4.5,"bin,configフォルダのあるフォルダ"
