@@ -217,7 +217,7 @@ class MMDAgent(AbstractCommunicator):
     MMDAgentを起動し，発話や動作の実行を行う．
     """
 
-    def __init__(self, is_debug=False):
+    def __init__(self, is_activate_confirm=True ,is_debug=False):
         self.debug = is_debug
         host = "%s" % gethostname()
         port = 39390
@@ -259,6 +259,9 @@ class MMDAgent(AbstractCommunicator):
         time.sleep(3)
         self.is_speaking = False
         self.base_time = time.time()
+        
+        if is_activate_confirm == True:
+            self.say("MMDAgentを起動しました")
 
         self.speak_start_command_time = None
         self.speak_end_command_time = None
@@ -276,9 +279,17 @@ class MMDAgent(AbstractCommunicator):
     def say(self, speech):
         command =  'SYNTH_START|mei|mei_voice_normal|{}'.format(speech)
         self.is_speaking = True
+        speak_start = time.time()
+        limit = len(speech) / 2.5
         self.send_line(command, "shift_jis")
         while self.is_speaking:
-            pass
+            elapsed = time.time() - speak_start
+            if elapsed > limit:
+                raise TimeoutError("音声合成でタイムアウトが発生しました")
+            else:
+                time.sleep(0.1)
+            
+            
 
     def move(self, motion):
         fp = "{0}/Motion/{1}/{1}.vmd".format(self.mmd_example_path, motion)
@@ -366,10 +377,10 @@ def mmd_test():
 			mmd.move(motion)
     
 def main():
-    record_test()
+    # record_test()
     # smile_test("tmp.wav")
     # face_test()
-    # mmd_test()
+    mmd_test()
     
 if __name__ == "__main__":
     main()
