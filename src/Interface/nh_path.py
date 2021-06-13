@@ -8,32 +8,27 @@ class NHPath:
     ../refData/path.csvを読み込み辞書として保持する
     """
     
-    def __init__(self):
+    def __init__(self, is_debug=False):
+        self.debug = is_debug
+        fp = os.path.join(os.path.dirname(__file__), "../refData/path.csv")
+        fp = fp.replace(os.sep, "/")
+        self.print_debug("read:{}".format(fp))
         self.path = {}
-        with open("../refData/path.csv", encoding="shift-jis") as f:
+        with open(fp, encoding="shift-jis") as f:
             reader = csv.reader(f)
             for row in reader:
-                self.path[row[0]] = row[1]
+                path_tmp = row[1]
+                abs_path = os.path.join(os.path.dirname(__file__), path_tmp)
+                abs_path = abs_path.replace(os.sep, "/")
+                self.path[row[0]] = abs_path
+                self.print_debug("{}:{}".format(row[0], abs_path))
 
-    def get_abs_path(self, name):
-        """
-        絶対パスを返す
-        Parameters
-        ----------
-        name : str
-            refData/path.csvの1列目の値(MMDAgentなど)
+    def set_debug(self, debug):
+        self.debug = debug
 
-        Returns
-        -------
-        abs_path_slash : str
-            絶対パス．
-            階層の区切り文字をスラッシュに統一している．
-        """
-        p = pathlib.Path(self.path[name])
-        abs_path = str(p.resolve())
-        abs_path_slash = abs_path.replace(os.sep, "/")
-        return abs_path_slash
-    
+    def print_debug(self, message):
+        if(self.debug):
+            print(message)
     
 def main():
     p = NHPath()

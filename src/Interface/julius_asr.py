@@ -46,7 +46,7 @@ class JuliusASR(AbstractCommunicator):
         # read path	
         nh_path = NHPath()
         try:
-            julius_path = nh_path.get_abs_path("julius")
+            julius_path = nh_path.path["julius"]
         except KeyError:
             print("Julius path undefined")
             sys.exit()
@@ -191,7 +191,7 @@ class userUtteranceInfo:
 
 
 def julius_test():
-    julius = JuliusASR(is_debug=True)
+    julius = JuliusASR(response_time_no_word=6, turn_buffer=1.5, is_debug=True)
     julius.m_turn.set_debug(True)
     for i in range(3):
         print("turn {}".format(i+1))

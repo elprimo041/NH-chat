@@ -232,7 +232,6 @@ class GoogleASR:
             max_alternatives=1,)
         streaming_config = speech.StreamingRecognitionConfig(
             config=config, interim_results=True)
-        print("init mic_manager")
         mic_manager = ResumableMicrophoneStream(SAMPLE_RATE, CHUNK_SIZE)
         with mic_manager as self.stream:
             while not self.stream.closed:
@@ -289,7 +288,6 @@ class GoogleASR:
 
 def google_test():
     google = GoogleASR(response_time_no_word=6, turn_buffer=1.5, is_debug=True)
-    google.m_turn.set_debug(True)
     for i in range(3):
         print("turn {}".format(i+1))
         google.start()

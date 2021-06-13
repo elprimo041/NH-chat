@@ -48,8 +48,7 @@ class Record:
         self.print_debug("sox command:\n{}".format(command))
         self.is_recording = True
         self.save_complete = False
-        self.proc = subprocess.Popen(command.split(), stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
+        self.proc = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     def stop(self):
         self.print_debug("end recording")
@@ -76,7 +75,7 @@ class OpenSmile:
         # read path	
         nh_path = NHPath()
         try:
-            smile_path = nh_path.get_abs_path("openSMILE")
+            smile_path = nh_path.path["openSMILE"]
         except KeyError:
             print("openSMILE path undefined")
             sys.exit()
@@ -151,7 +150,7 @@ class OpenFace:
         # read path	
         nh_path = NHPath()
         try:
-            face_path = nh_path.get_abs_path("OpenFace")
+            face_path = nh_path.path["OpenFace"]
         except KeyError:
             print("OpenFace path undefined")
             sys.exit()
@@ -188,12 +187,19 @@ class OpenFace:
         self.print_debug("OpenFace command:\n{}".format(cmd))
         self.proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,\
             stderr=subprocess.PIPE)
+        activate_time = time.time()
+        print('#### OpenFace:Initiating start ####')
         while True:
-            line = self.proc.stdout.readline().decode()
-            self.print_debug(line)
-            if "Starting tracking" in line:
+            elapsed = time.time() - activate_time
+            if elapsed > 10:
+                print("OpenFaceの起動に失敗しました")
                 break
-        self.print_debug("Starting tracking")
+            line = self.proc.stdout.readline().decode()
+            if line != "":
+                self.print_debug(line)
+            if "Starting tracking" in line:
+                print('#### OpenFace:Initiating Done ####')
+                break
         self.is_running = True
 
     def stop(self):
@@ -226,8 +232,8 @@ class MMDAgent(AbstractCommunicator):
         # read path	
         nh_path = NHPath()
         try:
-            mmd_exe_path = nh_path.get_abs_path("MMDAgent")
-            self.mmd_example_path = nh_path.get_abs_path("MMDExample")
+            mmd_exe_path = nh_path.path["MMDAgent"]
+            self.mmd_example_path = nh_path.path["MMDExample"]
         except KeyError:
             print("MMDAgent or MMDExample path undefined")
             sys.exit()
@@ -300,11 +306,9 @@ class MMDAgent(AbstractCommunicator):
             self.print_debug("音声認識終了")
         elif "SYNTH_EVENT_START" in message:
             self.print_debug("音声合成開始")
-            # print("音声合成開始")
             self.speak_start_command_time = time.time()
         elif "SYNTH_EVENT_STOP" in message:
             self.print_debug("音声合成終了")
-            # print("音声合成終了")
             self.speak_end_command_time = time.time()
             self.is_speaking = False
         elif "LIPSYNC_EVENT_START" in message:
