@@ -189,7 +189,7 @@ is_julius = input("Julius音声認識の動作確認を行いますか？\ny/n>>
 if is_julius == "y":
     print("Julius音声認識の動作確認を行います")
     p = NHPath()
-    julius_path = p.path["Julius"]
+    julius_path = p.path["julius"]
     if os.path.exists(julius_path) == False:
         print("dictation kitのフォルダが存在しません")
         sys.exit()
