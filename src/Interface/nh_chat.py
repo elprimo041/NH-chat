@@ -1,21 +1,19 @@
 # -*- coding:utf-8 -*-
-
 import time
 import pandas as pd
 import pickle
 import numpy as np
 import time
-import threading
 import datetime
 import csv
 import shutil
-from optparse import OptionParser
+from argparse import ArgumentParser
 import warnings
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 # RLをパスに追加
 import os
 import sys
-sys.path.append(os.path.join(os.getcwd(), '../RL'))
+sys.path.append(os.path.join(os.getcwd(), "../RL"))
 
 from abstract_chat import AbstractChat
 from tools import Record, OpenSmile, OpenFace
@@ -38,9 +36,10 @@ class NHChat(AbstractChat):
                          turn_buffer=turn_buffer, text=text, 
                          asr_module=asr_module, is_debug=is_debug)
         self.env = DialogueEnv()
-        self.record = Record(is_debug=is_debug)
-        self.opensmile = OpenSmile(is_debug=is_debug)
-        self.openface = OpenFace(mode=mode, is_debug=is_debug)
+        if self.text == False:
+            self.record = Record(is_debug=is_debug)
+            self.opensmile = OpenSmile(is_debug=is_debug)
+            self.openface = OpenFace(mode=mode, is_debug=is_debug)
         Qtable_name = "../refData/RL_files/{}/{}_Q".format(model, model)
         self.log_name = "../refData/RL_files/{}/{}_log.csv"\
                             .format(model, model)
@@ -73,7 +72,8 @@ class NHChat(AbstractChat):
                 break
         os.mkdir(self.data_path)
         os.mkdir("{}/voice".format(self.data_path))
-        self.openface.start("{}/{}_face.csv".format(self.data_path, self.user))
+        if self.text == False:
+            self.openface.start("{}/{}_face.csv".format(self.data_path, self.user))
         self.base_time = time.time()
 
     def __del__(self):
@@ -104,7 +104,7 @@ class NHChat(AbstractChat):
         file_name = "../../user_data/{0}/voice/{0}_{1}_voice"\
             .format(self.user, str(self.current_turn).zfill(3))
         self.record_log(sys_utt)
-        print('system:{}'.format(sys_utt))
+        print("system:{}".format(sys_utt))
         sys_start_time = time.time() - self.base_time
         self.mmd.say(sys_utt)
         self.record_log("*")
@@ -160,6 +160,33 @@ class NHChat(AbstractChat):
             is_end = False
         return is_end
         
+
+    def process_text(self):
+        chg_theme, theme = self.themeHis.decideNextTheme(self.user_impression)
+        # システム発話生成
+        sys_utt, da = self.env.utterance_selection_softmax(\
+            chg_theme, theme, self.agent.Q[self.state])
+        # 発話選択
+        self.env.sys_utterance_log.append(sys_utt)
+        self.record_log(sys_utt)
+        print("system:{}".format(sys_utt))
+        self.record_log("*")
+        user_utt = input("ユーザ発話>>")
+        self.env.user_utterance_log.append(user_utt)
+        print("user:{}".format(user_utt))
+
+        self.user_impression = float(input("User impression>>"))
+        # 状態更新
+        n_state = self.env.get_next_state(self.user_impression, sys_utt, user_utt)
+        self.state = n_state
+
+        # 終了判定
+        self.current_turn += 1
+        if self.current_turn == self.turn_num:
+            is_end = True
+        else:
+            is_end = False
+        return is_end
 
     def predict_dialogue(self, user_utt, sys_utt, da, user_start_time):
         s_len = len(sys_utt)
@@ -225,17 +252,18 @@ class NHChat(AbstractChat):
             w = csv.writer(f)
             for l in self.log:
                 w.writerow(l)
+        
         with open(fp_setting, "w", encoding="shift-jis") as f:
             w = csv.writer(f)
             w.writerow(["user", self.user])
             w.writerow(["model", self.model])
-            w.writerow(["ASR module", self.asr_module])
             w.writerow(["turn num", self.turn_num])
-            w.writerow(["mode", self.mode])
-            w.writerow(["response_time_no_word", self.asr.m_turn.response_time_no_word])
-            w.writerow(["turn_buffer", self.asr.m_turn.turn_buffer])
-            
-
+            if self.text == False:
+                w.writerow(["ASR module", self.asr_module])
+                w.writerow(["mode", self.mode])
+                w.writerow(["response_time_no_word", self.asr.m_turn.response_time_no_word])
+                w.writerow(["turn_buffer", self.asr.m_turn.turn_buffer])
+                
 def nh_test_offline():
     nh = NHChat(mode="WebCamera", asr_module="julius", is_debug=True)
     nh.run()
@@ -245,8 +273,87 @@ def nh_test_online():
     nh.run()
 
 def main():
+    # options
+    # コマンドエラー時に表示する文字列
+    desc = u"{0} [Args] [Options]\nDetailed options -h or --help".format(__file__)
+    
+    parser = ArgumentParser(description=desc)
+    parser.add_argument(
+        "--model",
+        type = str,
+        dest = "model",
+        default = "200117_c099",
+        help = "強化学習モデル名(default:200117_c099)"
+    )
+    parser.add_argument(
+        "--mode",
+        type = str,
+        dest = "mode",
+        default = "WebCamera",
+        help = "実行モード．onlineかWebCamera(default:WebCamera)"
+    )
+    parser.add_argument(
+        "-u", "--user",
+        type = str,
+        dest = "user",
+        default = "tmp_user",
+        help = "ユーザ名(default:tmp_user)"
+    )
+    parser.add_argument(
+        "--turn_num",
+        type = int,
+        dest = "turn_num",
+        default = 3,
+        help = "ターン数(default:3)"
+    )
+    parser.add_argument(
+        "--text",
+        type = bool,
+        dest = "text",
+        default = False,
+        help = "テキストで対話を行うか(default:False)"
+    )
+    parser.add_argument(
+        "--asr", "--asr_module",
+        type = str,
+        dest = "asr_module",
+        default = "google",
+        help = "音声認識モジュール．googleかjulius(default:google)"
+    )
+    parser.add_argument(
+        "--response_time_no_word",
+        type = float,
+        dest = "response_time_no_word",
+        default = 6.0,
+        help = "ユーザターン開始後ユーザが発話しない場合，\
+            どの程度待ってターンテイキングを行うか(default:6.0)"
+    )
+    parser.add_argument(
+        "--turn_buffer",
+        type = float,
+        dest = "turn_buffer",
+        default = 6.0,
+        help = "ユーザ発話の音声認識が確定した後，\
+            どの程度待ってターンテイキングを行うか(default:1.5)"
+    )
+    parser.add_argument(
+        "--is_debug", "--debug",
+        type = bool,
+        dest = "is_debug",
+        default = False,
+        help = "デバックモードで実行するか(default:False)"
+    )
+    
+    args = parser.parse_args()
+    
     # nh_test_offline()
-    nh_test_online()
+    # nh_test_online()
+    
+    nh = NHChat(model=args.model, mode=args.mode, user=args.user,
+                turn_num=args.turn_num, text=args.text, asr_module=args.asr_module,
+                response_time_no_word=args.response_time_no_word,
+                turn_buffer=args.turn_buffer, is_debug=args.is_debug)
+    nh.run()
     
 if __name__ == "__main__":
     main()

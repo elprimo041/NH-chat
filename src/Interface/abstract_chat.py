@@ -24,17 +24,18 @@ class AbstractChat:
         self.utt_num = 1
         self.current_turn = 1
         self.header = ["ex_num", "speaker", "utt"]
-        self.mmd = MMDAgent()
-        if asr_module == "julius":
-            self.asr = JuliusASR(response_time_no_word=response_time_no_word, 
-                                 turn_buffer=turn_buffer, is_debug=is_debug)
-        elif asr_module == "google":
-            self.asr = GoogleASR(response_time_no_word=response_time_no_word, 
-                                 turn_buffer=turn_buffer, is_debug=is_debug)
-        else:
-            print("音声認識モジュールの名前が誤っています:{}".format(asr_module))
-            print("以下から選択してください\njulius, Google")
-            raise Exception()
+        if self.text == False:
+            self.mmd = MMDAgent()
+            if asr_module == "julius":
+                self.asr = JuliusASR(response_time_no_word=response_time_no_word, 
+                                    turn_buffer=turn_buffer, is_debug=is_debug)
+            elif asr_module == "google":
+                self.asr = GoogleASR(response_time_no_word=response_time_no_word, 
+                                    turn_buffer=turn_buffer, is_debug=is_debug)
+            else:
+                print("音声認識モジュールの名前が誤っています:{}".format(asr_module))
+                print("以下から選択してください\njulius, Google")
+                raise Exception()
 
     def __del__(self):
         self.end()
@@ -70,7 +71,10 @@ class AbstractChat:
 
     def run(self):
         while True:
-            is_end = self.process()
+            if self.text == True:
+                is_end = self.process_text()
+            else:
+                is_end = self.process()
             if is_end == True:
                 break
         if self.is_save_log == True:
@@ -78,8 +82,9 @@ class AbstractChat:
         self.end()
 
     def end(self):
-        self.mmd.end()
-        self.asr.end()
+        if self.text == False:
+            self.mmd.end()
+            self.asr.end()
 
     def process(self):
         sys_utt, is_end = self.generate_sys_utt()
@@ -91,6 +96,18 @@ class AbstractChat:
         self.utt_num += 1
         self.current_turn += 1
         return is_end
+    
+    def process_text(self):
+        sys_utt, is_end = self.generate_sys_utt()
+        print("system:{}".format(sys_utt))
+        self.record_log([self.utt_num, "S", sys_utt])
+        self.utt_num += 1
+        user_utt = self.get_user_utt()
+        self.record_log([self.utt_num, "U", user_utt])
+        self.utt_num += 1
+        self.current_turn += 1
+        return is_end
+        
 
     def get_user_utt(self):
         if self.text:

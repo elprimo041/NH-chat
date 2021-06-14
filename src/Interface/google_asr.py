@@ -4,7 +4,6 @@
 
 import sys
 import time
-import threading
 
 from google.cloud import speech
 import pyaudio
