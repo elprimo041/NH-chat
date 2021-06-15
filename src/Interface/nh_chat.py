@@ -97,7 +97,7 @@ class NHChat(AbstractChat):
                 break
             else:
                 time.sleep(0.1)
-        input("対話の準備ができたら任意の文字を入力してエンターキーを押してください\n>>")
+        input("対話の準備ができたら任意の文字を入力してエンターキーを押してください\na>>")
             
         
 
@@ -141,10 +141,10 @@ class NHChat(AbstractChat):
             else:
                 time.sleep(0.1)
         self.record.stop()
-        user_turn_end = time.time() - self.base_time
+        user_turn_end_time = time.time() - self.base_time
         user_utt = self.asr.read_result()
         self.env.user_utterance_log.append(user_utt)
-        user_start_time = self.asr.get_utt_start_time()
+        user_utt_start_time = self.asr.get_utt_start_time()
         # 録音したwavファイルが保存されるまで待機
         while True:
             if self.record.save_complete == True:
@@ -156,10 +156,10 @@ class NHChat(AbstractChat):
         print("user:{}".format(user_utt))
 
         # predict mono modal
-        d_pred = self.predict_dialogue(user_utt, sys_utt, da, user_start_time)
+        d_pred = self.predict_dialogue(user_utt, sys_utt, da, user_utt_start_time)
         v_pred = self.predict_voice("{}.csv".format(file_name))
         t_pred = self.predict_text(user_utt)
-        f_pred = self.predict_face(sys_start_time, user_turn_end)
+        f_pred = self.predict_face(sys_start_time, user_turn_end_time)
         self.print_debug("dialogue predict:{}".format(d_pred))
         self.print_debug("voice predict:{}".format(v_pred))
         self.print_debug("text predict:{}".format(t_pred))
