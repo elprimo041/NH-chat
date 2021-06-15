@@ -167,7 +167,8 @@ class OpenFace:
             self.cmd_common = "{}/FeatureExtraction.exe -device {} -aus -of "\
                 .format(face_path, CAMERA_NUM_OFFLINE)
         elif self.mode == "online":
-            self.cmd_common = "{}/FeatureExtraction.exe -device {} -aus -of "\
+            self.cmd_common = "{}/FeatureExtraction.exe -cam_width 960\
+                -cam_height 540 -device {} -aus -of "\
                 .format(face_path, CAMERA_NUM_ONLINE)        
 
     def set_debug(self, debug):
