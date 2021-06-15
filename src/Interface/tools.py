@@ -178,29 +178,31 @@ class OpenFace:
             print(message)
 
     def start(self, file_name):
-        if self.is_running == True:
-            print("openface is alrady running")
-            return
-        if not file_name.endswith(".csv"):
-            file_name += ".csv"
-        cmd = self.cmd_common + file_name
-        self.print_debug("OpenFace command:\n{}".format(cmd))
-        self.proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,\
-            stderr=subprocess.PIPE)
-        activate_time = time.time()
-        print('#### OpenFace:Initiating start ####')
-        while True:
-            elapsed = time.time() - activate_time
-            if elapsed > 10:
-                print("OpenFaceの起動に失敗しました")
-                break
-            line = self.proc.stdout.readline().decode()
-            if line != "":
-                self.print_debug(line)
-            if "Starting tracking" in line:
-                print('#### OpenFace:Initiating Done ####')
-                break
-        self.is_running = True
+        def start_thread(self, file_name):
+            if self.is_running == True:
+                print("openface is alrady running")
+                return
+            if not file_name.endswith(".csv"):
+                file_name += ".csv"
+            cmd = self.cmd_common + file_name
+            self.print_debug("OpenFace command:\n{}".format(cmd))
+            self.proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,\
+                stderr=subprocess.PIPE)
+            activate_time = time.time()
+            print('#### OpenFace:Initiating start ####')
+            while True:
+                elapsed = time.time() - activate_time
+                if elapsed > 15:
+                    raise TimeoutError("OpenFaceの起動に失敗しました")
+                line = self.proc.stdout.readline().decode()
+                if line != "":
+                    self.print_debug(line)
+                if "Starting tracking" in line:
+                    print('#### OpenFace:Initiating Done ####')
+                    break
+            self.is_running = True
+        thread = threading.Thread(target=start_thread, args=(self, file_name,))
+        thread.start()
 
     def stop(self):
         if self.is_running == False:

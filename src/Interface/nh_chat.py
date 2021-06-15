@@ -29,8 +29,9 @@ class NHChat(AbstractChat):
 
 
     def __init__(self, model="200117_c099", mode="WebCamera", user="tmp_user", 
-                 turn_num=3, text=True, asr_module="google", is_debug=False,
-                 response_time_no_word=6.0, turn_buffer=1.5):
+                 turn_num=3, text=True, asr_module="google", 
+                 response_time_no_word=6.0, turn_buffer=1.5, asr_conf=False, 
+                 is_debug=False):
         self.debug = is_debug
         super().__init__(response_time_no_word=response_time_no_word, 
                          turn_buffer=turn_buffer, text=text, 
@@ -54,6 +55,12 @@ class NHChat(AbstractChat):
         self.user = user
         self.current_turn = 0
         self.user_impression = None
+        
+        # 画面共有待ち
+        if self.mode == "online":
+            print("zoomの画面共有とOBSの仮想Webカメラの設定を行ってください")
+            input("準備ができたら任意の文字を入力してエンターキーを押してください\n>>")
+        
         # init folder
         # すでにユーザデータがある場合，消去するかユーザ名を変更する
         while True:
@@ -75,6 +82,24 @@ class NHChat(AbstractChat):
         if self.text == False:
             self.openface.start("{}/{}_face.csv".format(self.data_path, self.user))
         self.base_time = time.time()
+        if asr_conf == True:
+            speech = "こんにちは。私の声が聞こえたら「こんにちは」といってください。"
+            self.mmd.say(speech)
+            self.asr.start()
+            while True:
+                if self.asr.m_turn.is_sys_turn_end == True:
+                    break
+                else:
+                    time.sleep(0.1)
+            print("ASR:{}".format(self.asr.read_result()))
+        while True:
+            if self.openface.is_running == True:
+                break
+            else:
+                time.sleep(0.1)
+        input("対話の準備ができたら任意の文字を入力してエンターキーを押してください\n>>")
+            
+        
 
     def __del__(self):
         try:
@@ -240,20 +265,21 @@ class NHChat(AbstractChat):
 
     def save_log(self):
         """
-        記録したログをcsvファイルに出力する．
+        記録したログをtxtファイルに出力する．
         対話設定を別のcsvファイルに出力する．
         ログのみ文字コードをutf-8としている．
         対話設定ファイルはshift-jis．
         ほかのcsv,txtファイルも全てshift-jis．
         """
-        fp_log = "{}/{}.csv".format(self.data_path, self.user)
+        fp_log = "{}/{}.txt".format(self.data_path, self.user)
         fp_setting = "{}/{}_setting.csv".format(self.data_path, self.user)
+        # save log
         with open(fp_log, "w", encoding="utf-8") as f:
-            w = csv.writer(f)
             for l in self.log:
-                w.writerow(l)
+                f.writelines(l + "\n")
         
-        with open(fp_setting, "w", encoding="shift-jis") as f:
+        # save setting file
+        with open(fp_setting, "w", encoding="shift-jis", newline="") as f:
             w = csv.writer(f)
             w.writerow(["user", self.user])
             w.writerow(["model", self.model])
@@ -261,7 +287,8 @@ class NHChat(AbstractChat):
             if self.text == False:
                 w.writerow(["ASR module", self.asr_module])
                 w.writerow(["mode", self.mode])
-                w.writerow(["response_time_no_word", self.asr.m_turn.response_time_no_word])
+                w.writerow(["response_time_no_word", 
+                            self.asr.m_turn.response_time_no_word])
                 w.writerow(["turn_buffer", self.asr.m_turn.turn_buffer])
                 
 def nh_test_offline():
@@ -314,7 +341,7 @@ def main():
         help = "テキストで対話を行うか(default:False)"
     )
     parser.add_argument(
-        "--asr", "--asr_module",
+        "--asr_module",
         type = str,
         dest = "asr_module",
         default = "google",
@@ -332,9 +359,16 @@ def main():
         "--turn_buffer",
         type = float,
         dest = "turn_buffer",
-        default = 6.0,
+        default = 1.5,
         help = "ユーザ発話の音声認識が確定した後，\
             どの程度待ってターンテイキングを行うか(default:1.5)"
+    )
+    parser.add_argument(
+        "--asr_conf",
+        type = bool,
+        dest = "asr_conf",
+        default = False,
+        help = "初期化時に音声認識テストを行うか(default:False)"
     )
     parser.add_argument(
         "--is_debug", "--debug",
@@ -352,7 +386,8 @@ def main():
     nh = NHChat(model=args.model, mode=args.mode, user=args.user,
                 turn_num=args.turn_num, text=args.text, asr_module=args.asr_module,
                 response_time_no_word=args.response_time_no_word,
-                turn_buffer=args.turn_buffer, is_debug=args.is_debug)
+                turn_buffer=args.turn_buffer, asr_conf=args.asr_conf, 
+                is_debug=args.is_debug)
     nh.run()
     
 if __name__ == "__main__":
