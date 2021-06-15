@@ -48,7 +48,9 @@ class Record:
         self.print_debug("sox command:\n{}".format(command))
         self.is_recording = True
         self.save_complete = False
+        # Popen(command, shell=True)だと録音が正しく終了できない
         self.proc = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        
 
     def stop(self):
         self.print_debug("end recording")
