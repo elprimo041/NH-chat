@@ -331,7 +331,8 @@ def main():
         type = int,
         dest = "turn_num",
         default = 3,
-        help = "ターン数(default:3)"
+        help = "ターン数．システム発話とユーザ発話の対が1ターン．\
+            ユーザ発話がない場合もカウントされる．(default:3)"
     )
     parser.add_argument(
         "--text",
