@@ -128,7 +128,6 @@ class ResumableMicrophoneStream:
 
                 except queue.Empty:
                     break
-
             yield b"".join(data)
 
 class GoogleASR:
@@ -159,17 +158,20 @@ class GoogleASR:
         # 相対時間ではなく時刻
         self.recognition_confirmed_time = None
         self.stream = None
+        self.base_time = time.time()
 
     def set_debug(self, debug):
         self.debug = debug
 
     def print_debug(self, message):
         if(self.debug):
-            print(message)
+            elapsed = time.time() - self.base_time
+            elapsed = round(elapsed, 2)
+            print("[{}]:{}".format(elapsed, message))
 
     def listen_loop(self, responses):
         for response in responses:
-
+            self.print_debug(response)
             if get_current_time() - self.stream.start_time > STREAMING_LIMIT:
                 self.stream.start_time = get_current_time()
                 break
