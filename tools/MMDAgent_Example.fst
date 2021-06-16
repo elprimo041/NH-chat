@@ -40,84 +40,14 @@
 # See http://creativecommons.org/ for details.                      #
 # ----------------------------------------------------------------- #
 
-# Cartoon rendering
 
-use_cartoon_rendering=true
-use_mmd_like_cartoon=true
-cartoon_edge_width=0.35
-cartoon_edge_step=1.2
-cartoon_edge_selected_color=1.0,0.0,0.0,1.0
 
-# Camera
+# 0011-0020 Initialization
 
-camera_rotation=0.0,0.0,0.0
-camera_transition=0.0,13.0,0.0
-camera_distance=100.0
-camera_fovy=16.0
-
-# Stage
-
-stage_size=25.0,25.0,40.0
-
-# Fps
-
-show_fps=false
-fps_position=-2.5,22.0,3.0
-
-# Window
-
-window_size=600,600
-full_screen=false
-
-# Log
-
-log_size=80,30
-log_position=-17.5,3.0,-20.0
-log_scale=1.0
-
-# Light
-
-light_direction=0.5,1.0,0.5,0.0
-light_intensity=0.6
-light_color=1.0,1.0,1.0
-
-# Campus
-
-campus_color=0.0,0.0,0.2
-
-# OpenGL
-
-max_multi_sampling=4
-
-# Motion
-
-motion_adjust_time=0.0
-lypsync_priority=100.0
-
-# Bullet Physics
-
-bullet_fps=120
-gravity_factor=2.0
-
-# User interface
-
-rotate_step=4.5
-translate_step=0.5
-distance_step=4.0
-fovy_step=1.0
-
-# Shadow mapping
-
-use_shadow_mapping=false
-shadow_mapping_texture_size=1024
-shadow_mapping_self_density=1.0
-shadow_mapping_floor_density=0.5
-shadow_mapping_light_first=true
-
-# Comment
-
-display_comment_time=0.0
-
-# Model
-
-max_num_model=3
+0    11   <eps>                               MODEL_ADD|bootscreen|Accessory\bootscreen\bootscreen.pmd|0.0,12.85,17.6|0.0,0.0,0.0|OFF
+11   12   MODEL_EVENT_ADD|bootscreen          CAMERA|0,18,0|0,0,0|50.0|8|0
+12   14   <eps>                               MODEL_ADD|mei|Model\mei\mei.pmd|0.0,0.0,-14.0
+14   15   <eps>                               STAGE|Stage\building2\floor.bmp,Stage\building2\background.bmp
+15   16   <eps>                               MOTION_ADD|mei|base|Motion\mei_wait\mei_wait.vmd|FULL|LOOP|ON|OFF
+16   17   <eps>                               TIMER_START|bootscreen|1.5
+17   2    TIMER_EVENT_STOP|bootscreen         MODEL_DELETE|bootscreen
