@@ -97,7 +97,7 @@ class NHChat(AbstractChat):
                 break
             else:
                 time.sleep(0.1)
-        input("対話の準備ができたら任意の文字を入力してエンターキーを押してください\na>>")
+        input("対話の準備ができたら任意の文字を入力してエンターキーを押してください\n>>")
             
         
 
