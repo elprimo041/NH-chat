@@ -4,6 +4,7 @@ import threading
 import time
 import sys
 import os
+import re
 from socket import gethostname
 
 from nh_path import NHPath
@@ -282,17 +283,30 @@ class MMDAgent(AbstractCommunicator):
             print(message)
             
     def say(self, speech):
-        command =  'SYNTH_START|mei|mei_voice_normal|{}'.format(speech)
-        self.is_speaking = True
-        speak_start = time.time()
-        limit = len(speech) / 2.5
-        self.send_line(command, "shift_jis")
-        while self.is_speaking:
-            elapsed = time.time() - speak_start
-            if elapsed > limit:
-                raise TimeoutError("音声合成でタイムアウトが発生しました")
-            else:
-                time.sleep(0.1)
+        # speechが長すぎると強制終了するので分割
+        # 恐らくlen(speech) > 90でエラー？
+        # MMDAgentは文末文字(？．。！など)によって発音が変わらないみたいなので
+        #文末文字を含めずに分割しています
+        speech_list = re.split("[。．!！?？]", speech)
+        self.print_debug(speech_list)
+        for s in speech_list:
+            if len(s) > 90:
+                # 分割後しても長ければスキップ
+                print("発話が長すぎます．一度の発話を90文字以内にしてください．")
+                print(speech)
+                continue
+            command =  'SYNTH_START|mei|mei_voice_normal|{}'.format(s)
+            self.print_debug("command:\n{}".format(command))
+            self.is_speaking = True
+            speak_start = time.time()
+            limit = len(speech) / 2.5
+            self.send_line(command, "shift_jis")
+            while self.is_speaking:
+                elapsed = time.time() - speak_start
+                if elapsed > limit:
+                    raise TimeoutError("音声合成でタイムアウトが発生しました")
+                else:
+                    time.sleep(0.1)
             
             
 
@@ -300,6 +314,7 @@ class MMDAgent(AbstractCommunicator):
         fp = "{0}/Motion/{1}/{1}.vmd".format(self.mmd_example_path, motion)
         if os.path.isfile(fp):
             command = "MOTION_ADD|mei|action|" + fp + "|PART|ONCE"
+            self.print_debug("command:\n{}".format(command))
             self.send_line(command, "shift_jis")
         else:
             print("motion command is not found:{}".format(motion))
@@ -308,6 +323,7 @@ class MMDAgent(AbstractCommunicator):
         fp = "{0}/Expression/{1}/{1}.vmd".format(self.mmd_example_path, expression)
         if os.path.isfile(fp):
             command = "MOTION_ADD|mei|action|" + fp + "|PART|ONCE"
+            self.print_debug("command:\n{}".format(command))
             self.send_line(command, "shift_jis")
         else:
             print("expression file is not found:{}".format(expression))
@@ -331,12 +347,12 @@ class MMDAgent(AbstractCommunicator):
             self.print_debug("唇開始")
         elif "LIPSYNC_EVENT_STOP" in message:
             self.print_debug("唇終了")
-        # elif "MOTION_EVENT_ADD" in message:
-        # 	self.print_debug("動作開始")
-        # elif "MOTION_EVENT_CHANGE" in message:
-        # 	self.print_debug("動作変更")
-        # elif "MOTION_EVENT_DELETE" in message:
-        # 	self.print_debug("動作終了")
+        elif "MOTION_EVENT_ADD" in message:
+        	self.print_debug("動作開始")
+        elif "MOTION_EVENT_CHANGE" in message:
+        	self.print_debug("動作変更")
+        elif "MOTION_EVENT_DELETE" in message:
+        	self.print_debug("動作終了")
         
 
     def end(self):
@@ -365,21 +381,21 @@ def face_test():
     face.stop()
     
 def mmd_test():
-	mmd = MMDAgent(is_debug=True)
-	while True:
-		speech = input("動作>>")
-		if speech == "end":
-			mmd.move("mei_bye")
-			mmd.say("さようなら")
-			time.sleep(2)
-			mmd.end()
-			break
-		elif speech == "say":
-			speech = input("システム発話>>")
-			mmd.say(speech)
-		elif speech == "move":
-			motion = input("モーション>>")
-			mmd.move(motion)
+    mmd = MMDAgent(is_debug=True)
+    while True:
+        speech = input("動作>>")
+        if speech == "end":
+            mmd.move("mei_bye")
+            mmd.say("さようなら")
+            time.sleep(2)
+            mmd.end()
+            break
+        elif speech == "say":
+            speech = input("システム発話>>")
+            mmd.say(speech)
+        elif speech == "move":
+            motion = input("モーション>>")
+            mmd.move(motion)
     
 def main():
     # record_test()
