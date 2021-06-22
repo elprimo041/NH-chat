@@ -2,6 +2,7 @@
 import time
 import csv
 import datetime
+import os
 
 from tools import MMDAgent
 from julius_asr import JuliusASR
@@ -44,7 +45,6 @@ class AbstractChat:
         self.debug = debug
 
     def print_debug(self, message):
-        print("print in abstract chat")
         if(self.debug):
             print(message)
 
@@ -60,7 +60,9 @@ class AbstractChat:
     def save_log(self, fp=""):
         if fp == "":
             now = datetime.datetime.now()
-            fp = "../../log/{}.csv".format(now.strftime("%Y%m%d_%H%M%S")) 
+            fp = "../../user_data/{0}/{0}.csv".format(now.strftime("%Y%m%d_%H%M%S"))
+            data_path = "../../user_data/{0}/".format(now.strftime("%Y%m%d_%H%M%S"))
+        os.mkdir(data_path) 
         with open(fp, "w", newline="", encoding="shift-jis") as f:
             w = csv.writer(f)
             if self.header != None:

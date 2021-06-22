@@ -4,6 +4,10 @@
 
 import sys
 import time
+import wave
+import matplotlib.pyplot as plt
+import numpy as np
+
 
 from google.cloud import speech
 import pyaudio
@@ -25,7 +29,7 @@ def get_current_time():
 class ResumableMicrophoneStream:
     """Opens a recording stream as a generator yielding the audio chunks."""
 
-    def __init__(self, rate, chunk_size):
+    def __init__(self, rate, chunk_size, is_debug=False, file_num=0):
         self._rate = rate
         self.chunk_size = chunk_size
         self._num_channels = 1
@@ -42,8 +46,9 @@ class ResumableMicrophoneStream:
         self.last_transcript_was_final = False
         self.new_stream = True
         self._audio_interface = pyaudio.PyAudio()
+        self._format = pyaudio.paInt16
         self._audio_stream = self._audio_interface.open(
-            format=pyaudio.paInt16,
+            format=self._format,
             channels=self._num_channels,
             rate=self._rate,
             input=True,
@@ -53,6 +58,17 @@ class ResumableMicrophoneStream:
             # overflow while the calling thread makes network requests, etc.
             stream_callback=self._fill_buffer,
         )
+        
+        self.debug = is_debug
+        self.file_name = "googleASR_{}".format(file_num)
+        self.data_all = []
+
+    def print_debug(self, message):
+        if(self.debug):
+            print(message)
+
+    def set_debug(self, debug):
+        self.debug = debug
 
     def __enter__(self):
 
@@ -68,6 +84,23 @@ class ResumableMicrophoneStream:
         # streaming_recognize method will not block the process termination.
         self._buff.put(None)
         self._audio_interface.terminate()
+        
+        if self.debug:
+            # waveファイルの保存
+            wavFile = wave.open("{}.wav".format(self.file_name), 'wb')
+            wavFile.setnchannels(self._num_channels)
+            wavFile.setsampwidth(self._audio_interface.get_sample_size(self._format))
+            wavFile.setframerate(SAMPLE_RATE)
+            joined_data = b"".join(self.data_all)
+            wavFile.writeframes(joined_data)
+            wavFile.close()
+            self.print_debug("save {}".format(self.file_name))
+            
+            # 波形画像の保存
+            wave_result = np.frombuffer(joined_data, dtype="int16") / float(2**15)
+            plt.plot(wave_result)
+            plt.savefig("{}.png".format(self.file_name))
+            
 
     def _fill_buffer(self, in_data, *args, **kwargs):
         """Continuously collect data from the audio stream, into the buffer."""
@@ -112,10 +145,12 @@ class ResumableMicrophoneStream:
             # end of the audio stream.
             chunk = self._buff.get()
             self.audio_input.append(chunk)
+            
 
             if chunk is None:
                 return
             data.append(chunk)
+            self.data_all.append(chunk)
             # Now consume whatever other data's still buffered.
             while True:
                 try:
@@ -124,6 +159,7 @@ class ResumableMicrophoneStream:
                     if chunk is None:
                         return
                     data.append(chunk)
+                    self.data_all.append(chunk)
                     self.audio_input.append(chunk)
 
                 except queue.Empty:
@@ -140,6 +176,7 @@ class GoogleASR:
     
     def __init__(self, response_time_no_word, turn_buffer, is_debug=False):
         self.debug = is_debug
+        self.file_num = 0
         self.m_turn = ManageTrun(self, response_time_no_word=response_time_no_word, 
                                  turn_buffer=turn_buffer, is_debug=is_debug)
         self.is_listening = False
@@ -159,6 +196,7 @@ class GoogleASR:
         self.recognition_confirmed_time = None
         self.stream = None
         self.base_time = time.time()
+        
 
     def set_debug(self, debug):
         self.debug = debug
@@ -233,7 +271,8 @@ class GoogleASR:
             max_alternatives=1,)
         streaming_config = speech.StreamingRecognitionConfig(
             config=config, interim_results=True)
-        mic_manager = ResumableMicrophoneStream(SAMPLE_RATE, CHUNK_SIZE)
+        mic_manager = ResumableMicrophoneStream(SAMPLE_RATE, CHUNK_SIZE, 
+                                                is_debug=self.debug, file_num=self.file_num)
         with mic_manager as self.stream:
             while not self.stream.closed:
                 self.stream.audio_input = []
@@ -267,7 +306,8 @@ class GoogleASR:
 
                 if not self.stream.last_transcript_was_final:
                     sys.stdout.write("\n")
-                self.stream.new_stream = True   
+                self.stream.new_stream = True
+        self.file_num += 1
             
     def stop(self):
         self.print_debug("stop Google ASR")
@@ -289,7 +329,7 @@ class GoogleASR:
 
 def google_test():
     google = GoogleASR(response_time_no_word=6, turn_buffer=1.5, is_debug=True)
-    for i in range(3):
+    for i in range(1):
         print("turn {}".format(i+1))
         google.start()
         while not google.m_turn.is_sys_turn_end:
