@@ -286,8 +286,10 @@ class MMDAgent(AbstractCommunicator):
         # speechが長すぎると強制終了するので分割
         # 恐らくlen(speech) > 90でエラー？
         # MMDAgentは文末文字(？．。！など)によって発音が変わらないみたいなので
-        #文末文字を含めずに分割しています
+        # 文末文字を含めずに分割しています
         speech_list = re.split("[。．!！?？]", speech)
+        # リストから空白要素""を削除
+        speech_list = [utt for utt in speech_list if utt != ""]
         self.print_debug(speech_list)
         for s in speech_list:
             if len(s) > 90:
@@ -299,11 +301,14 @@ class MMDAgent(AbstractCommunicator):
             self.print_debug("command:\n{}".format(command))
             self.is_speaking = True
             speak_start = time.time()
-            limit = len(speech) / 2.5
+            limit = 5 + len(speech) / 2.5
             self.send_line(command, "shift_jis")
             while self.is_speaking:
                 elapsed = time.time() - speak_start
                 if elapsed > limit:
+                    print("speak_start:{}".format(speak_start))
+                    print("elapsed:{}".format(elapsed))
+                    print("limit:{}".format(limit))
                     raise TimeoutError("音声合成でタイムアウトが発生しました")
                 else:
                     time.sleep(0.1)
