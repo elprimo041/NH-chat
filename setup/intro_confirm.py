@@ -49,6 +49,7 @@ try:
     from google.cloud import speech
     import pyaudio
     from six.moves import queue
+    import MeCab
 
     print("モジュールは正しくインストールされています")
     print("==========================================")
@@ -111,6 +112,28 @@ if os.path.isdir(result_path):
     time.sleep(0.2)
 os.mkdir(result_path)
 nh_path = NHPath()
+
+print("MeCabの動作確認を行います")
+m = MeCab.Tagger ("-Ochasen")
+print("想定される出力")
+print("すもも  スモモ  すもも  名詞-一般\n\
+も      モ      も      助詞-係助詞\n\
+もも    モモ    もも    名詞-一般\n\
+も      モ      も      助詞-係助詞\n\
+もも    モモ    もも    名詞-一般\n\
+の      ノ      の      助詞-連体化\n\
+うち    ウチ    うち    名詞-非自立-副詞可能\n\
+EOS")
+print("ーーーーーーーーーーーーーーーーーーーーーーーーーーー")
+print("実際の出力")
+print(m.parse ("すもももももももものうち"))
+is_correct_MeCab = input("想定される出力と実際の出力は同じでしたか？\ny/n>>")
+if is_correct_MeCab == "y":
+    print("MeCabの動作を確認しました")
+    print("==========================================")
+else:
+    print("インストール時の文字コード，MeCabへのパスなどを確認してください")
+    sys.exit()
 
 print("openfaceの動作確認を行います")
 face_result_path = "data/result/sample_face.csv"
