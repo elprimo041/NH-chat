@@ -269,10 +269,19 @@ class GoogleASR:
             sample_rate_hertz=SAMPLE_RATE,
             language_code="ja-JP",
             max_alternatives=1,)
+        # streaming_config = speech.StreamingRecognitionConfig(
+        #     config=config, interim_results=True)
+        # single_utterance設定をオン
+        # オンにしないと音声認識結果が確定するまで60秒かかる
         streaming_config = speech.StreamingRecognitionConfig(
+<<<<<<< HEAD
+            config=config, interim_results=True, single_utterance=True)
+        mic_manager = ResumableMicrophoneStream(SAMPLE_RATE, CHUNK_SIZE)
+=======
             config=config, interim_results=True)
         mic_manager = ResumableMicrophoneStream(SAMPLE_RATE, CHUNK_SIZE, 
                                                 is_debug=self.debug, file_num=self.file_num)
+>>>>>>> 64a852f5564c0c6d9eddcaa029ad855b198b9743
         with mic_manager as self.stream:
             while not self.stream.closed:
                 self.stream.audio_input = []
