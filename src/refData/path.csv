@@ -1,5 +1,7 @@
-MMDAgent,../../tools/MMDAgent_win32-1.4,MMDAgent.exe‚ª‚ ‚éƒtƒHƒ‹ƒ_
-MMDExample,../../tools/MMDAgent_Example-1.4,MMDAgent_Example.mdf‚ª‚ ‚éƒtƒHƒ‹ƒ_
-OpenFace,../../tools/OpenFace_2.2.0_win_x64,FaceLandmarkImg.exe‚ª‚ ‚éƒtƒHƒ‹ƒ_
-openSMILE,../../tools/opensmile-3.0-win-x64,"bin,configƒtƒHƒ‹ƒ_‚Ì‚ ‚éƒtƒHƒ‹ƒ_"
-julius,../../tools/dictation-kit-4.5,"bin,configƒtƒHƒ‹ƒ_‚Ì‚ ‚éƒtƒHƒ‹ƒ_"
+MMDAgent,../../tools/MMDAgent_win32-1.4,MMDAgent.exeãŒã‚ã‚‹ãƒ•ã‚©ãƒ«ãƒ€
+MMDAgent-EX,../../tools/MMDAgent-EX-2.0-20210116-win32,MMDAgent-EX.exeãŒã‚ã‚‹ãƒ•ã‚©ãƒ«ãƒ€
+MMDExample,../../tools/MMDAgent_Example-1.4,MMDAgent_Example.mdfãŒã‚ã‚‹ãƒ•ã‚©ãƒ«ãƒ€
+MMDExample-EX,../../tools/MMDAgent-EX_Example,MMDAgent-EX_Example.mdfãŒã‚ã‚‹ãƒ•ã‚©ãƒ«ãƒ€
+OpenFace,../../tools/OpenFace_2.2.0_win_x64,FaceLandmarkImg.exeãŒã‚ã‚‹ãƒ•ã‚©ãƒ«ãƒ€
+openSMILE,../../tools/opensmile-3.0-win-x64,"bin,configãƒ•ã‚©ãƒ«ãƒ€ã®ã‚ã‚‹ãƒ•ã‚©ãƒ«ãƒ€"
+julius,../../tools/dictation-kit-4.5,"bin,configãƒ•ã‚©ãƒ«ãƒ€ã®ã‚ã‚‹ãƒ•ã‚©ãƒ«ãƒ€"
