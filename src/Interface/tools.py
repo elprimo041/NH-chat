@@ -17,6 +17,7 @@ CAMERA_NUM_ONLINE = 2
 SAMPLE_RATE = 16000
 CHUNK_SIZE = int(SAMPLE_RATE / 10)  # 100ms
 
+
 class Record:
     """
     soxを用いて録音する．
@@ -50,8 +51,8 @@ class Record:
         self.is_recording = True
         self.save_complete = False
         # Popen(command, shell=True)だと録音が正しく終了できない
-        self.proc = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        
+        self.proc = subprocess.Popen(
+            command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     def stop(self):
         self.print_debug("end recording")
@@ -75,7 +76,7 @@ class OpenSmile:
 
     def __init__(self, is_debug=False):
         self.debug = is_debug
-        # read path	
+        # read path
         nh_path = NHPath()
         try:
             smile_path = nh_path.path["openSMILE"]
@@ -102,20 +103,18 @@ class OpenSmile:
         if os.path.isfile("{}.arff".format(file_name)):
             os.remove("{}.arff".format(file_name))
             self.print_debug("delete {}.arff".format(file_name))
-        if os.path.isfile("{}.csv".format(file_name)): 
+        if os.path.isfile("{}.csv".format(file_name)):
             os.remove("{}.csv".format(file_name))
             self.print_debug("delete {}.csv".format(file_name))
-            
+
         cmd = self.cmd_common.format(file_name, file_name)
         self.print_debug("command openSMILE:\n{}".format(cmd))
-        subprocess.call(cmd.split(" "), shell=True, stdout=subprocess.PIPE, \
-            stderr=subprocess.PIPE)
+        subprocess.call(cmd.split(" "), shell=True, stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
         # arffが作成されるまで待機
-        while True:
-            if os.path.isfile("{}.arff".format(file_name)):
-                time.sleep(0.1)
-                break
-        with open("{}.arff".format(file_name) , "r") as f_in:
+        while not os.path.isfile("{}.arff".format(file_name)):
+            time.sleep(0.1)
+        with open("{}.arff".format(file_name), "r") as f_in:
             content = f_in.readlines()
             new = self.arff_to_csv(content)
         with open("{}.csv".format(file_name), "w", encoding="shift-jis") as f_out:
@@ -150,7 +149,7 @@ class OpenFace:
 
     def __init__(self, mode="WebCamera", is_debug=False):
         self.debug = is_debug
-        # read path	
+        # read path
         nh_path = NHPath()
         try:
             face_path = nh_path.path["OpenFace"]
@@ -164,7 +163,7 @@ class OpenFace:
         self.is_running = False
         self.proc = None
         self.m_task = ManageTask()
-        
+
         # init command
         if self.mode == "WebCamera":
             self.cmd_common = "{}/FeatureExtraction.exe -device {} -aus -of "\
@@ -172,7 +171,7 @@ class OpenFace:
         elif self.mode == "online":
             self.cmd_common = "{}/FeatureExtraction.exe -cam_width 960\
                 -cam_height 540 -device {} -aus -of "\
-                .format(face_path, CAMERA_NUM_ONLINE)        
+                .format(face_path, CAMERA_NUM_ONLINE)
 
     def set_debug(self, debug):
         self.debug = debug
@@ -190,8 +189,8 @@ class OpenFace:
                 file_name += ".csv"
             cmd = self.cmd_common + file_name
             self.print_debug("OpenFace command:\n{}".format(cmd))
-            self.proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,\
-                stderr=subprocess.PIPE)
+            self.proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+                                         stderr=subprocess.PIPE)
             activate_time = time.time()
             print('#### OpenFace:Initiating start ####')
             while True:
@@ -223,19 +222,19 @@ class MMDAgent(AbstractCommunicator):
     MMDAgentを起動し，発話や動作の実行を行う．
     """
 
-    def __init__(self, is_activate_confirm=True ,is_debug=False):
+    def __init__(self, is_activate_confirm=True, is_debug=False):
         self.debug = is_debug
         host = "%s" % gethostname()
         port = 39390
-        
+
         # すでにMMDAgentが実行中の場合はキル
         self.m_task = ManageTask()
         if self.m_task.confirm_task("MMDAgent") == True:
             self.m_task.kill_task("MMDAgent")
             time.sleep(1)
         super(MMDAgent, self).__init__(host, port)
-        
-        # read path	
+
+        # read path
         nh_path = NHPath()
         try:
             mmd_exe_path = nh_path.path["MMDAgent"]
@@ -245,11 +244,11 @@ class MMDAgent(AbstractCommunicator):
             sys.exit()
         cmd = "{}/MMDAgent.exe {}/MMDAgent_Example.mdf"\
             .format(mmd_exe_path, self.mmd_example_path)
-        
+
         # run MMDAgent
         self.print_debug("command MMD:\n{}".format(cmd))
         self.proc = subprocess.Popen(cmd, shell=True)
-        
+
         # connect MMdagent server
         start_time = time.time()
         while True:
@@ -265,7 +264,7 @@ class MMDAgent(AbstractCommunicator):
         time.sleep(3)
         self.is_speaking = False
         self.base_time = time.time()
-        
+
         if is_activate_confirm == True:
             self.say("MMDAgentを起動しました")
 
@@ -281,7 +280,7 @@ class MMDAgent(AbstractCommunicator):
     def print_debug(self, message):
         if self.debug:
             print(message)
-            
+
     def say(self, speech):
         # speechが長すぎると強制終了するので分割
         # 恐らくlen(speech) > 90でエラー？
@@ -297,7 +296,7 @@ class MMDAgent(AbstractCommunicator):
                 print("発話が長すぎます．一度の発話を90文字以内にしてください．")
                 print(speech)
                 continue
-            command =  'SYNTH_START|mei|mei_voice_normal|{}'.format(s)
+            command = 'SYNTH_START|mei|mei_voice_normal|{}'.format(s)
             self.print_debug("command:\n{}".format(command))
             self.is_speaking = True
             speak_start = time.time()
@@ -312,8 +311,6 @@ class MMDAgent(AbstractCommunicator):
                     raise TimeoutError("音声合成でタイムアウトが発生しました")
                 else:
                     time.sleep(0.1)
-            
-            
 
     def move(self, motion):
         fp = "{0}/Motion/{1}/{1}.vmd".format(self.mmd_example_path, motion)
@@ -325,7 +322,8 @@ class MMDAgent(AbstractCommunicator):
             print("motion command is not found:{}".format(motion))
 
     def express(self, expression):
-        fp = "{0}/Expression/{1}/{1}.vmd".format(self.mmd_example_path, expression)
+        fp = "{0}/Expression/{1}/{1}.vmd".format(
+            self.mmd_example_path, expression)
         if os.path.isfile(fp):
             command = "MOTION_ADD|mei|action|" + fp + "|PART|ONCE"
             self.print_debug("command:\n{}".format(command))
@@ -353,12 +351,11 @@ class MMDAgent(AbstractCommunicator):
         elif "LIPSYNC_EVENT_STOP" in message:
             self.print_debug("唇終了")
         elif "MOTION_EVENT_ADD" in message:
-        	self.print_debug("動作開始")
+            self.print_debug("動作開始")
         elif "MOTION_EVENT_CHANGE" in message:
-        	self.print_debug("動作変更")
+            self.print_debug("動作変更")
         elif "MOTION_EVENT_DELETE" in message:
-        	self.print_debug("動作終了")
-        
+            self.print_debug("動作終了")
 
     def end(self):
         self.stop()
@@ -375,16 +372,19 @@ def record_test():
     time.sleep(5)
     rec.stop()
 
+
 def smile_test(fp):
     smile = OpenSmile(is_debug=True)
     smile.run(fp)
+
 
 def face_test():
     face = OpenFace(is_debug=True)
     face.start("tmp/tmp.csv")
     time.sleep(15)
     face.stop()
-    
+
+
 def mmd_test():
     mmd = MMDAgent(is_debug=True)
     while True:
@@ -401,12 +401,14 @@ def mmd_test():
         elif speech == "move":
             motion = input("モーション>>")
             mmd.move(motion)
-    
+
+
 def main():
     # record_test()
     # smile_test("tmp.wav")
     # face_test()
     mmd_test()
-    
+
+
 if __name__ == "__main__":
     main()

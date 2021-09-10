@@ -13,12 +13,13 @@ from google.cloud import speech
 import pyaudio
 from six.moves import queue
 
-from manage_turn import ManageTrun
+from manage_turn import ManageTurn
 
 # Audio recording parameters
-STREAMING_LIMIT = 240000  # 4 minutes
+STREAMING_LIMIT = 4 * 60 * 1000  # 4 minutes
 SAMPLE_RATE = 16000
 CHUNK_SIZE = int(SAMPLE_RATE / 10)  # 100ms
+
 
 def get_current_time():
     """Return Current Time in MS."""
@@ -58,7 +59,7 @@ class ResumableMicrophoneStream:
             # overflow while the calling thread makes network requests, etc.
             stream_callback=self._fill_buffer,
         )
-        
+
         self.debug = is_debug
         self.file_name = "googleASR_{}".format(file_num)
         self.data_all = []
@@ -84,23 +85,24 @@ class ResumableMicrophoneStream:
         # streaming_recognize method will not block the process termination.
         self._buff.put(None)
         self._audio_interface.terminate()
-        
+
         if self.debug:
             # waveファイルの保存
             wavFile = wave.open("{}.wav".format(self.file_name), 'wb')
             wavFile.setnchannels(self._num_channels)
-            wavFile.setsampwidth(self._audio_interface.get_sample_size(self._format))
+            wavFile.setsampwidth(
+                self._audio_interface.get_sample_size(self._format))
             wavFile.setframerate(SAMPLE_RATE)
             joined_data = b"".join(self.data_all)
             wavFile.writeframes(joined_data)
             wavFile.close()
             self.print_debug("save {}".format(self.file_name))
-            
+
             # 波形画像の保存
-            wave_result = np.frombuffer(joined_data, dtype="int16") / float(2**15)
+            wave_result = np.frombuffer(
+                joined_data, dtype="int16") / float(2**15)
             plt.plot(wave_result)
             plt.savefig("{}.png".format(self.file_name))
-            
 
     def _fill_buffer(self, in_data, *args, **kwargs):
         """Continuously collect data from the audio stream, into the buffer."""
@@ -145,7 +147,6 @@ class ResumableMicrophoneStream:
             # end of the audio stream.
             chunk = self._buff.get()
             self.audio_input.append(chunk)
-            
 
             if chunk is None:
                 return
@@ -166,6 +167,7 @@ class ResumableMicrophoneStream:
                     break
             yield b"".join(data)
 
+
 class GoogleASR:
     """
     Google Speech to Textで音声認識を行うクラス
@@ -173,30 +175,29 @@ class GoogleASR:
     使用には認証ファイルの取得が必要
     https://cloud.google.com/speech-to-text/docs/libraries?hl=ja
     """
-    
+
     def __init__(self, response_time_no_word, turn_buffer, is_debug=False):
         self.debug = is_debug
         self.file_num = 0
-        self.m_turn = ManageTrun(self, response_time_no_word=response_time_no_word, 
+        self.m_turn = ManageTurn(self, response_time_no_word=response_time_no_word,
                                  turn_buffer=turn_buffer, is_debug=is_debug)
         self.is_listening = False
         self.recognition_result = ""
         # ユーザのターンが始まり音声認識を開始した時刻
         # 相対時間ではなく時刻
         self.turn_start_time = None
-        
+
         # ユーザのターンが始まってから初めてユーザ発話を認識するまでの時間
         # 時刻ではなく，経過時間
         # ユーザ発話開始時刻 - ユーザのターン開始時刻(self.turn_start_time)
         self.utt_start_time = None
-        
+
         # ユーザの音声認識結果が確定した時刻
         # ターンテイキングで使う
         # 相対時間ではなく時刻
         self.recognition_confirmed_time = None
         self.stream = None
         self.base_time = time.time()
-        
 
     def set_debug(self, debug):
         self.debug = debug
@@ -233,7 +234,8 @@ class GoogleASR:
             if result.result_end_time.microseconds:
                 result_micros = result.result_end_time.microseconds
 
-            self.stream.result_end_time = int((result_seconds * 1000) + (result_micros / 1000))
+            self.stream.result_end_time = int(
+                (result_seconds * 1000) + (result_micros / 1000))
 
             if result.is_final:
                 # 音声認識結果が確定
@@ -251,7 +253,6 @@ class GoogleASR:
                     self.is_listening = True
                     self.print_debug("start listening")
                 self.stream.last_transcript_was_final = False
-
 
     def start(self, auto_turn=True, reset_result=False):
         # auto_turnがTrueの場合自動でターンテイキングを行う
@@ -284,19 +285,17 @@ class GoogleASR:
                     speech.StreamingRecognizeRequest(audio_content=content)
                     for content in audio_generator
                 )
-                
+
                 if (turn_thread_flag == False) and (auto_turn == True):
                     turn_thread_flag = True
                     self.m_turn.start_turn_thread()
-                    
+
                 responses = client.streaming_recognize(
                     streaming_config, requests)
-                
-                
-                    
+
                 # 音声認識結果を取得するループ開始
                 self.listen_loop(responses)
-                
+
                 # streamリミットを超えた場合の音声認識再開処理
                 # 4分stream繋ぎ続けない限り実行されない
                 if self.stream.result_end_time > 0:
@@ -311,11 +310,11 @@ class GoogleASR:
                     sys.stdout.write("\n")
                 self.stream.new_stream = True
         self.file_num += 1
-            
+
     def stop(self):
         self.print_debug("stop Google ASR")
         self.stream.closed = True
-        
+
     def end(self):
         pass
 
@@ -330,6 +329,7 @@ class GoogleASR:
         self.recognition_result = ""
         return result
 
+
 def google_test():
     google = GoogleASR(response_time_no_word=6, turn_buffer=1.5, is_debug=True)
     for i in range(1):
@@ -342,6 +342,7 @@ def google_test():
 
 def main():
     google_test()
+
 
 if __name__ == "__main__":
 

@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 import subprocess
 
+
 class ManageTask:
 
     def __init__(self):
@@ -24,7 +25,7 @@ class ManageTask:
             subprocess.call(cmd, shell=True)
             if is_print == True:
                 print("kill {}({})".format(name, pid))
-                
+
     def get_pid(self, task_name: str):
         """
         タスクの名前から該当するタスクの名前とプロセスIDを取得しリストで返す
@@ -53,7 +54,7 @@ class ManageTask:
                 name_list.append(line.split()[0])
         return pid_list, name_list
 
-    def confirm_task(self, task_name :str, is_print=False):
+    def confirm_task(self, task_name: str, is_print=False):
         """
         指定したタスク名が実行中か確認する．
         実行中であればプロセスIDとともにプリントする．
@@ -86,6 +87,7 @@ def main():
     is_kill = input("タスクキルを行いますか？y/n>>")
     if is_kill == "y":
         mt.kill_task(task_name)
-    
+
+
 if __name__ == "__main__":
-	main()
+    main()
