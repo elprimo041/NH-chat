@@ -98,10 +98,7 @@ class DialogueEnv():
             if (fields[0] == '名詞') and (fields[1] in ['固有名詞', '一般']):
                 properNouns.append(node.surface)
             node = node.next
-        if len(properNouns) > 0:
-            return 'No'
-        else:
-            return 'Nx'
+        return 'No' if len(properNouns) > 0 else 'Nx'
 
     # 次のstateを決定
     def get_next_state(self, impression, sys_utterance, user_utterance):
