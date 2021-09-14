@@ -1,0 +1,45 @@
+@startuml
+title VoiceMeeter Banana の設定
+
+node VoiceMeeterBanana {
+    top to bottom direction
+    package Output {
+        left to right direction
+        component A1
+        component "B1(既定のデバイス)" as B1
+        component "B2(既定の通信デバイス)" as B2
+    }
+
+    package Input {
+        left to right direction
+        component "Virtual Inputs AUX\n(VoiceMeeter Aux Input)" as VAI
+        component "Virtual Inputs VAIO\n(VoiceMeeter Input)" as VI
+        component "Hardware Inputs 1" as HW1
+    }
+}
+
+left to right direction
+interface 被験者音声 as subjectVoice
+interface MMDAgent音声 as mmdAgentVoice
+interface 実験担当者音声 as operatorVoice
+
+interface 被験者 as subject
+interface 音声認識モジュール as asr
+interface 実験担当者 as operator
+
+
+[subjectVoice] --> [VAI]
+[mmdAgentVoice] --> [VI]
+[operatorVoice] --> [HW1]
+
+[VAI] --> [A1]
+[VI] --> [A1]
+[VAI] --> [B1]
+[VI] --> [B2]
+[HW1] ..> [B2] : 必要に応じて\nミュート解除
+
+[A1] --> [operator]
+[B1] --> [asr]
+[B2] --> [subject]
+
+@enduml

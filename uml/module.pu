@@ -1,0 +1,39 @@
+@startuml
+title モジュール図
+
+together {
+    component OBS as obs
+    component Zoom as zoom
+    interface 被験者 as subject
+    component "VoiceMeeter Banana" as voiceMeeter
+
+    package "NH-chat" as nhChat {
+        component SOX as sox
+        package "RL" as RLModule {
+            component "音声認識\n(Google ASR or Julius)" as asr
+            component "顔画像認識\n(OpenFace)" as openFace
+            component "韻律認識\n(OpenSMILE)" as openSmile
+            component "強化学習モジュール" as RL
+            component Qテーブル as Qtable
+        }
+        component MMDAgent as mmdAgent
+    }
+}
+
+left to right direction
+[subject] <-r-> [zoom] 
+[zoom] -d-> [obs] : 被験者映像
+[zoom] --> [voiceMeeter] : 被験者発話音声
+[voiceMeeter] ---> [asr] :  被験者発話音声
+[voiceMeeter] ---> [sox] : 被験者発話音声
+[obs] --> [openFace] : 顔画像
+[sox] --> [openSmile] : 被験者発話音声
+[asr] --> [RL] : 被験者発話内容
+[openFace] --> [RL] : 顔画像特徴量
+[openSmile] --> [RL] : 韻律特徴量
+[RL] --> [Qtable] : 心象情報
+[Qtable] --> [mmdAgent] : システム発話内容
+[mmdAgent] --> [voiceMeeter] : システム発話
+[voiceMeeter] --> [zoom] : システム発話
+
+@enduml

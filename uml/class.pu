@@ -1,0 +1,459 @@
+@startuml
+title クラス図
+
+package RL {
+    class extFaceFea << (M,orchid) >>
+    class extTextFea << (M,orchid) >>
+    class makeModel << (M,orchid) >> 
+    class predUI << (M,orchid) >>
+    package agent {
+        class Agent
+        class TrainedQlearningAgent
+    }
+    class DialogueEnv
+    class Params
+    class HistoryTheme
+}
+
+package Interface {
+    abstract AbstractChat
+    abstract AbstractCommunicator
+    package google_asr {
+        class ResumableMicrophoneStream
+        class GoogleASR
+    }
+    package julius_asr {
+        class JuliusASR
+        class userUtteranceInfo
+    }
+    class ManageTask
+    class ManageTurn
+    class NHChat
+    class NHPath
+    class TCPClient
+    package tools {
+        class Record
+        class OpenSmile
+        class OpenFace
+        class MMDAgent
+    }
+}
+
+
+abstract AbstractChat {
+    debug
+    text
+    is_save_log
+    turn_num
+    log
+    utt_num
+    current_turn
+    header
+    mmd
+    asr
+    __init__(response_time_no_word, turn_buffer, text, asr_module, is_debug=, turn_num, is_save_log)
+    __del__()
+    set_debug(debug)
+    pring_debug(message)
+    record_log(content)
+    save_log(fp)
+    run()
+    end()
+    process()
+    process_text()
+    get_user_utt()
+    generate_sys_utt()
+}
+
+abstract AbstractCommunicator {
+    client
+    __init__(hostname, port)
+    start()
+    stop()
+    send_line(command, encoding)
+    start_receive_thread()
+    on_received(message)
+}
+
+class Params {
+    params
+    cwd
+    __init__()
+    get(param_name, system_action_type)
+}
+
+class ResumableMicrophoneStream {
+    _rate
+    chunk_size
+    _num_channels
+    _buff
+    closed
+    start_time
+    restart_counter
+    audio_input
+    last_audio_input
+    result_end_time
+    is_final_end_time
+    final_request_end_time
+    bridging_offset
+    last_transcript_was_final
+    new_stream
+    _audio_interface
+    _format
+    _audio_stream
+    debug
+    file_name
+    data_all
+    print_debug(message)
+    set_debug(debug)
+    __enter__()
+    __exit__(type, value, traceback)
+    _fill_buffer(in_data, *args, **kwargs)
+    generator()
+}
+
+class GoogleASR {
+    debug
+    file_num
+    m_turn
+    is_listening
+    recognition_result
+    turn_start_time
+    utt_start_time
+    recognition_confirmed_time
+    stream
+    base_time
+    set_debug(debug)
+    print_debug(message)
+    listen_loop(responses)
+    start(auto_turn, reset_result)
+    stop()
+    end()
+    get_utt_start_time()
+    read_result()
+}
+
+class JuliusASR {
+    debug
+    m_task
+    m_turn
+    is_listening
+    msg_stock
+    recognition_result
+    turn_start_time
+    utt_start_time
+    recognition_confirmed_time
+    proc
+    __init__(response_time_no_word, turn_buffer, is_debug)
+    __del__()
+    set_debug(debug)
+    print_debug(debug)
+    start(auto_turn, reset_result)
+    stop()
+    end()
+    get_utt_start_time()
+    read_result()
+    on_received(message)
+    xml_parser(msg_stock, msg)
+    make_ts_dic(xmlstr)
+}
+
+class userUtteranceInfo {
+    us_time
+    word
+    __init__()
+    addWord(msg)
+    setWord(msg)
+    setTime(time)
+}
+
+class ManageTask {
+    __init__()
+    kill_task(task_name, is_print)
+    get_pid(task_name)
+    confirm_task(task_name, is_print)    
+}
+
+class "ManageTrun" as ManageTurn {
+    debug
+    asr
+    response_time_no_word
+    turn_buffer
+    is_sys_turn_end
+    __init__(asr, response_time_no_word, turn_buffer, is_debug)
+    set_debug(debug)
+    print_debug(message)
+    start_turn_thread()
+    turn_take_simple_rule()
+}
+
+class NHChat {
+    env
+    text
+    record
+    opensmile
+    openface
+    log_name
+    agent
+    state
+    themeHis
+    model
+    mode
+    asr_module
+    turn_num
+    user
+    current_turn
+    user_impression
+    data_path
+    base_time
+    debug
+    __init__(model, mode, user, turn_num, text, asr_module, response_time_no_word, turn_buffer, asr_conf, is_debug)
+    __del__()
+    set_debug(debug)
+    print_debug(message)
+    process()
+    process_text()
+    predict_dialogue(user_utt, sys_utt, da, user_start_time)
+    predict_voice(file_name)
+    predict_text(user_utt)
+    predict_face(start, end)
+    record_log(utt)
+    save_log()
+}
+
+class NHPath {
+    path    
+    __init__(is_debug)
+    set_debug(debug)
+    print_debug(message)
+}
+
+class TCPClient {
+    ip
+    port
+    socket
+    in_
+    out
+    connected
+    debug
+    buffer
+    __init__(ip, port)
+    set_debug(debug)
+    print_debug(message)
+    connect()
+    disconnect()
+    send(cmd, encoding)
+    send_line(cmd, encoding)
+    read_line_blocking()
+    read_line_non_blocking()
+    read_json_object()
+    is_connected()
+}
+
+class Record {
+    is_recording
+    save_complete
+    debug
+    proc
+    command_common
+    __init__(is_debug)
+    __del__()
+    set_debug(debug)
+    print_debug(message)
+    start(file_name)
+    stop()
+}
+
+class OpenSmile {
+    debug
+    cmd_common
+    __init__(is_debug)
+    set_debug(debug)
+    print_debug(message)
+    run(file_name)
+    arff_to_csv(content)
+}
+
+class OpenFace {
+    debug
+    mode
+    is_running
+    proc
+    m_task
+    cmd_common
+    __init__(mode, is_debug)
+    set_debug(debug)
+    print_debug(debug)
+    start(file_name)
+    stop()
+}
+
+class MMDAgent {
+    debug
+    m_task
+    mmd_example_path
+    proc
+    is_speaking
+    base_time
+    speak_start_command_time
+    speak_end_command_time
+    __init__(is_activate_confirm, is_debug)
+    __del__()
+    set_debug(debug)
+    print_debug(message)
+    say(speech)
+    move(motion)
+    express(expression)
+    on_received(message)
+    end()
+}
+
+class Agent {
+    Q
+    epsilon
+    reward_log
+    dialogue_log
+    max_n_exchg
+    __init__(epsilon)
+    policy(s, action, selection)
+    init_log()
+    append_log_reward(reward)
+    append_log_dialogue(exchgID, state, action, theme, impression, s_utte, u_utte)
+    show_reward_log(interval, episode, filename)
+    write_dialogue_log(filename)
+    saveR(filename)
+    saveQ(table, filename)
+    softmax(a, coef)
+}
+
+class TrainedQlearningAgent {
+    Q
+    __init__(filename)
+    fillQ(env)
+    getUtteranceClassTheme(utterance)
+    conversation(env)
+}
+
+class DialogueEnv {
+    params
+    history_sysutte
+    history_sysutte_class
+    da_df
+    action_df
+    actions
+    actionIndex
+    states_sys_da
+    states_noun_presence
+    states_impression
+    states
+    stateIndex
+    thres_low_UI
+    thres_high_UI
+    sys_utterance_log
+    user_utterance_log
+    weight_specific_theme
+    __init__()
+    add_sysutte(utterance, clas)
+    reset()
+    getSimpleDAFromSysUtterance(sys_utterance)
+    getImpressionLevel(impression)
+    getSpecificNoun(sentence)
+    get_next_state(impression, sys_utterance, user_utterance)
+    weightSpecificTheme(df)
+    softmax(array, coef)
+    utterance_selection_softmax(chg_theme, theme, prob_actions mei_cmd)
+}
+
+class HistoryTheme {
+    allTheme
+    random_choice
+    nowtheme_ExchgNum
+    history_impression_1theme
+    max_exchange_num_1theme
+    min_exchange_num_1theme
+    low_UI3_border
+    nowTheme
+    __init__(random_choice)
+    decideNextTheme(UI)
+}
+
+class extFaceFea {
+    predictionFace(start, end, file_name)
+}
+
+class extTextFea {
+    is_in_speech(word_list, search_word)
+    ext_origin(user_id, base_data, pos_data)
+    ext_bow(user_id, base_data)
+    makeTmeta()
+    makeFea(input_text)
+}
+
+class makeModel {
+    makeModel(df, clf, filepath)
+    makePCAModel(df, filepath, pca_dim)
+    scaling(arrX, filepath)
+    remDataFrameError(df, meta, remove, devision)
+}
+
+class predUI {
+    makeDiaDF(reaction, s_len, u_len, su_len, da)
+    predUnknown(X-test, fea_type, is_print)
+    selectVoiceFea(df, case)
+    PCAonlyBOW(df, pca_dim, pca)
+    changePredValueRange(fusion_pred)
+}
+
+AbstractCommunicator <|-- JuliusASR
+AbstractCommunicator <|-- MMDAgent
+
+Params <|-- Agent
+Params <|-- HistoryTheme
+Agent <|-- TrainedQlearningAgent
+
+AbstractChat <|-- NHChat
+
+AbstractChat::mmd *-- MMDAgent
+AbstractChat::asr *-l- JuliusASR
+AbstractChat::asr *-l- GoogleASR
+
+AbstractCommunicator::client *-- TCPClient
+
+GoogleASR::m_turn *-- ManageTurn
+GoogleASR::stream *-- ResumableMicrophoneStream
+
+JuliusASR::m_task *-- ManageTask
+JuliusASR::m_turn *-- ManageTurn
+JuliusASR::__init__ *-- NHPath : use
+JuliusASR::xml_parser --> userUtteranceInfo : return
+
+NHChat::env *-- DialogueEnv
+NHChat::record *-- Record
+NHChat::opensmile *-- OpenSmile
+NHChat::openface *-- OpenFace
+NHChat::agent *-- TrainedQlearningAgent
+NHChat::themeHis *-- HistoryTheme
+
+OpenSmile::__init__ *-- NHPath : use
+
+OpenFace::__init__ *-- NHPath : use
+OpenFace::m_task *-- ManageTask
+
+MMDAgent::m_task *-- ManageTask
+MMDAgent::__init__ *-- NHPath : use
+
+TrainedQlearningAgent::conversation *-- HistoryTheme : use
+
+DialogueEnv::params *-- Params
+
+makeModel *-- predUI
+
+NHChat::process *-- predUI
+NHChat::predict_dialogue *-- predUI
+NHChat::predict_voice *-- predUI
+NHChat::predict_text *-- predUI
+NHChat::predict_face *-- predUI
+NHChat::predict_face *-- extFaceFea
+NHChat::predict_text *-- extTextFea
+
+@enduml
