@@ -229,20 +229,20 @@ class MMDAgent(AbstractCommunicator):
 
         # すでにMMDAgentが実行中の場合はキル
         self.m_task = ManageTask()
-        if self.m_task.confirm_task("MMDAgent") == True:
-            self.m_task.kill_task("MMDAgent")
+        if self.m_task.confirm_task("MMDAgent-EX") == True:
+            self.m_task.kill_task("MMDAgent-EX")
             time.sleep(1)
         super(MMDAgent, self).__init__(host, port)
 
         # read path
         nh_path = NHPath()
         try:
-            mmd_exe_path = nh_path.path["MMDAgent"]
+            mmd_exe_path = nh_path.path["MMDAgent-EX"]
             self.mmd_example_path = nh_path.path["MMDExample"]
         except KeyError:
             print("MMDAgent or MMDExample path undefined")
             sys.exit()
-        cmd = "{}/MMDAgent.exe {}/MMDAgent_Example.mdf"\
+        cmd = "{}/MMDAgent-EX.exe {}/MMDAgent_Example.mdf"\
             .format(mmd_exe_path, self.mmd_example_path)
 
         # run MMDAgent
@@ -301,7 +301,7 @@ class MMDAgent(AbstractCommunicator):
             self.is_speaking = True
             speak_start = time.time()
             limit = 5 + len(speech) / 2.5
-            self.send_line(command, "shift_jis")
+            self.send_line(command, "utf-8")
             while self.is_speaking:
                 elapsed = time.time() - speak_start
                 if elapsed > limit:

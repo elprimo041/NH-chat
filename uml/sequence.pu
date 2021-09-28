@@ -1,0 +1,64 @@
+@startuml
+title NH-chatの処理の流れ
+
+actor 実験担当者 as operator
+actor "被験者\n(Zoom or 対面)" as subject
+
+participant "NH-chat I/F" as nhChat
+participant "NH-chat RL" as RL
+
+actor MMDAgent as mmdAgent
+
+participant "顔画像認識\n(OpenFace)" as openFace
+participant "音声認識" as asr
+participant "韻律認識\n(OpenSMILE)" as openSmile
+
+== 初期化 ==
+operator -> nhChat : 起動
+nhChat --> mmdAgent : MMDAgentの起動
+nhChat --> asr : 音声認識モジュールの初期化
+nhChat --> openSmile : 韻律認識モジュールの初期化
+nhChat --> openFace : 顔画像認識を別スレッドで起動
+hnote over openFace : 顔画像情報をCSVに保存\n(フレームごと)
+nhChat --> RL : Qテーブルの初期化指示
+nhChat -> RL : 対話状態の初期化指示
+hnote over RL : 対話状態の初期化
+RL -> nhChat : 初期対話状態
+hnote over nhChat : 心象情報の初期化
+
+== 対話開始 ==
+
+loop 指定したターン数が経過するまで
+    nhChat -> RL : 被験者の心象情報
+    hnote over RL : 話題の決定
+    RL -> nhChat : 話題
+    nhChat -> RL : 対話の状態に対応する\nQテーブルの内容・話題
+    hnote over  RL : システム発話の生成
+    RL -> nhChat : システム発話内容
+    nhChat -> mmdAgent : システム発話内容
+    mmdAgent -> subject : システム発話
+    hnote over nhChat : 録音開始
+    subject -> nhChat : 被験者発話
+    loop 発話が終わるまで 
+        nhChat -> asr : 被験者発話音声
+        asr -> nhChat : 被験者発話内容
+    end
+    hnote over nhChat : 録音停止
+    nhChat -> openSmile : 被験者発話音声
+    openSmile -> nhChat : 韻律情報
+    nhChat -> openFace : 顔画像情報CSVにアクセス
+    openFace -> nhChat : 当該フレームの顔画像情報
+
+    nhChat -> RL : 対話状態・被験者発話内容・\n韻律情報・顔画像情報
+    hnote over RL : 個別のモデル推定
+    hnote over RL : モデルごとの推定の統合
+    RL -> nhChat : 被験者の心象情報
+
+    nhChat -> RL : 心象情報・\n発話内容（システム・被験者）
+    hnote over RL : 対話の状態更新
+    RL -> nhChat : 対話の状態
+end
+
+== 対話終了 ==
+
+@enduml
