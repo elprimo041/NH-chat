@@ -14,7 +14,7 @@ class NHPath:
         fp = fp.replace(os.sep, "/")
         self.print_debug("read:{}".format(fp))
         self.path = {}
-        with open(fp, encoding="shift-jis") as f:
+        with open(fp, encoding="utf-8") as f:
             reader = csv.reader(f)
             for row in reader:
                 path_tmp = row[1]
