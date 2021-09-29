@@ -1,9 +1,9 @@
-# from JsonUtils import JsonUtils
+# -*- coding:utf-8 -*-
 import socket
 import json
 
-class TCPClient:
 
+class TCPClient:
 
     def __init__(self, ip, port):
         self.ip = None
@@ -29,13 +29,15 @@ class TCPClient:
             try:
                 self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.socket.connect((self.ip, self.port))
-                self.print_debug('connect to ' + str(self.ip) + '/' + str(self.port))
+                self.print_debug(
+                    'connect to ' + str(self.ip) + '/' + str(self.port))
             except socket.gaierror:
                 self.connected = False
-                self.print_debug('fail to connect ' + str(self.ip) + '/' + str(self.port))
+                self.print_debug('fail to connect ' +
+                                 str(self.ip) + '/' + str(self.port))
                 return False
             self.connected = True
-            return True   
+            return True
         else:
             self.print_debug('already connected')
             return False
@@ -52,7 +54,7 @@ class TCPClient:
     def send(self, cmd, encoding):
         if not self.connected:
             return 'ERROR: Not connected'
-        
+
         try:
             self.socket.send(bytes(cmd, encoding))
             self.print_debug('[Client] send : ' + cmd)
@@ -78,7 +80,7 @@ class TCPClient:
             return tmp
         except OSError as e:
             return str(e)
-        
+
     def read_line_non_blocking(self):
         if not self.connected:
             return 'ERROR: Not connected'

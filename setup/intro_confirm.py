@@ -66,7 +66,7 @@ try:
     from google_asr import ResumableMicrophoneStream, GoogleASR
     from julius_asr import JuliusASR
     from manage_task import ManageTask
-    from manage_turn import ManageTrun
+    from manage_turn import ManageTurn
     from nh_chat import NHChat
     from nh_path import NHPath
     from tcp_client import TCPClient

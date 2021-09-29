@@ -1,13 +1,13 @@
 # -*- coding:utf-8 -*-
 import csv
-import pathlib
 import os
+
 
 class NHPath:
     """
     ../refData/path.csvを読み込み辞書として保持する
     """
-    
+
     def __init__(self, is_debug=False):
         self.debug = is_debug
         fp = os.path.join(os.path.dirname(__file__), "../refData/path.csv")
@@ -29,12 +29,14 @@ class NHPath:
     def print_debug(self, message):
         if(self.debug):
             print(message)
-    
+
+
 def main():
     p = NHPath()
     print(p.path)
     print(p.get_abs_path("MMDAgent"))
     print(type(p.get_abs_path("MMDAgent")))
-    
+
+
 if __name__ == "__main__":
-	main()
+    main()

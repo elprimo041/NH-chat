@@ -28,14 +28,14 @@ class AbstractChat:
         if self.text == False:
             self.mmd = MMDAgent()
             if asr_module == "julius":
-                self.asr = JuliusASR(response_time_no_word=response_time_no_word, 
-                                    turn_buffer=turn_buffer, is_debug=is_debug)
+                self.asr = JuliusASR(response_time_no_word=response_time_no_word,
+                                     turn_buffer=turn_buffer, is_debug=is_debug)
             elif asr_module == "google":
-                self.asr = GoogleASR(response_time_no_word=response_time_no_word, 
-                                    turn_buffer=turn_buffer, is_debug=is_debug)
+                self.asr = GoogleASR(response_time_no_word=response_time_no_word,
+                                     turn_buffer=turn_buffer, is_debug=is_debug)
             else:
                 print("音声認識モジュールの名前が誤っています:{}".format(asr_module))
-                print("以下から選択してください\njulius, Google")
+                print("以下から選択してください\njulius,google")
                 raise Exception()
 
     def __del__(self):
@@ -60,37 +60,38 @@ class AbstractChat:
     def save_log(self, fp=""):
         if fp == "":
             now = datetime.datetime.now()
-            fp = "../../user_data/{0}/{0}.csv".format(now.strftime("%Y%m%d_%H%M%S"))
-            data_path = "../../user_data/{0}/".format(now.strftime("%Y%m%d_%H%M%S"))
-        os.mkdir(data_path) 
+            fp = "../../user_data/{0}/{0}.csv".format(
+                now.strftime("%Y%m%d_%H%M%S"))
+            data_path = "../../user_data/{0}/".format(
+                now.strftime("%Y%m%d_%H%M%S"))
+            os.mkdir(data_path)
+
         with open(fp, "w", newline="", encoding="shift-jis") as f:
             w = csv.writer(f)
             if self.header != None:
                 w.writerow(self.header)
             for l in self.log:
                 w.writerow(l)
-                
 
     def run(self):
-        while True:
-            if self.text == True:
-                is_end = self.process_text()
-            else:
-                is_end = self.process()
-            if is_end == True:
-                break
+        while not self.process(is_text=self.text):
+            pass
+
         if self.is_save_log == True:
             self.save_log()
         self.end()
 
     def end(self):
-        if self.text == False:
+        if not self.text:
             self.mmd.end()
             self.asr.end()
 
-    def process(self):
+    def process(self, is_text=False):
         sys_utt, is_end = self.generate_sys_utt()
-        self.mmd.say(sys_utt)
+        if is_text:
+            print("system:{}".format(sys_utt))
+        else:
+            self.mmd.say(sys_utt)
         self.record_log([self.utt_num, "S", sys_utt])
         self.utt_num += 1
         user_utt = self.get_user_utt()
@@ -98,18 +99,6 @@ class AbstractChat:
         self.utt_num += 1
         self.current_turn += 1
         return is_end
-    
-    def process_text(self):
-        sys_utt, is_end = self.generate_sys_utt()
-        print("system:{}".format(sys_utt))
-        self.record_log([self.utt_num, "S", sys_utt])
-        self.utt_num += 1
-        user_utt = self.get_user_utt()
-        self.record_log([self.utt_num, "U", user_utt])
-        self.utt_num += 1
-        self.current_turn += 1
-        return is_end
-        
 
     def get_user_utt(self):
         if self.text:
@@ -136,15 +125,16 @@ class AbstractChat:
         self.print_debug("generate sys utt:{}".format(sys_utt))
         self.print_debug("is end:{}".format(is_end))
         return sys_utt, is_end
-        
+
 
 def main():
     chat_test()
 
+
 def chat_test():
     chat = AbstractChat(is_debug=True)
     chat.run()
-    
+
 
 if __name__ == "__main__":
     main()

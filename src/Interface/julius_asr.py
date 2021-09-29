@@ -7,8 +7,9 @@ from socket import gethostname
 
 from abstract_communicator import AbstractCommunicator
 from manage_task import ManageTask
-from manage_turn import ManageTrun
+from manage_turn import ManageTurn
 from nh_path import NHPath
+
 
 class JuliusASR(AbstractCommunicator):
     """
@@ -23,34 +24,34 @@ class JuliusASR(AbstractCommunicator):
         self.debug = is_debug
         self.m_task = ManageTask()
         self.m_task.kill_task("julius.exe")
-        self.m_turn = ManageTrun(self, response_time_no_word=response_time_no_word, 
+        self.m_turn = ManageTurn(self, response_time_no_word=response_time_no_word,
                                  turn_buffer=turn_buffer, is_debug=is_debug)
-        
+
         self.is_listening = False
         self.msg_stock = ""
         self.recognition_result = ""
         # ユーザのターンが始まり音声認識を開始した時刻
         # 相対時間ではなく時刻
         self.turn_start_time = None
-        
+
         # ユーザのターンが始まってから初めてユーザ発話を認識するまでの時間
         # 時刻ではなく，経過時間
         # ユーザ発話開始時刻 - ユーザのターン開始時刻(self.turn_start_time)
         self.utt_start_time = None
-        
+
         # ユーザの音声認識結果が確定した時刻
         # ターンテイキングで使う
         # 相対時間ではなく時刻
         self.recognition_confirmed_time = None
-        
-        # read path	
+
+        # read path
         nh_path = NHPath()
         try:
             julius_path = nh_path.path["julius"]
         except KeyError:
             print("Julius path undefined")
             sys.exit()
-        
+
         # activate julius
         cmd = "start /min {0}/bin/windows/julius.exe -C {0}/main.jconf \
                 -C {0}/am-gmm.jconf -module > nul".format(julius_path)
@@ -69,14 +70,14 @@ class JuliusASR(AbstractCommunicator):
     def __del__(self):
         self.proc.kill()
         self.m_task.kill_task("julius")
-    
+
     def set_debug(self, debug):
         self.debug = debug
 
     def print_debug(self, message):
         if(self.debug):
             print(message)
-    
+
     def start(self, auto_turn=True, reset_result=False):
         self.print_debug("start Julius ASR")
         super().start()
@@ -89,7 +90,7 @@ class JuliusASR(AbstractCommunicator):
         self.utt_start_time = None
         if auto_turn == True:
             self.m_turn.start_turn_thread()
-        
+
     def stop(self):
         self.print_debug("stop Julius ASR")
         super().stop()
@@ -98,13 +99,13 @@ class JuliusASR(AbstractCommunicator):
         super().stop()
         self.proc.kill()
         self.m_task.kill_task("julius")
-        
+
     def get_utt_start_time(self):
         # ユーザ発話がなかった場合はresponse_time_no_wordを返す
         if self.utt_start_time == None:
             self.utt_start_time = self.m_turn.response_time_no_word
         return self.utt_start_time
-    
+
     def read_result(self):
         result = self.recognition_result
         self.recognition_result = ""
@@ -125,7 +126,7 @@ class JuliusASR(AbstractCommunicator):
             if ts != None:
                 self.recognition_result += ts.word
                 self.print_debug("ASR:{}".format(ts.word))
-                
+
     def xml_parser(self, msg_stock, msg):
         msg_stock += msg
         msg_list = msg_stock.split('</RECOGOUT>')
@@ -145,7 +146,7 @@ class JuliusASR(AbstractCommunicator):
                     ts.addWord(d['WORD'])
 
             msg_stock = ''.join(msg_list[1:])
-            
+
             return msg_stock, ts
         else:
             msg_stock = ''.join(msg_list[:])
@@ -157,7 +158,8 @@ class JuliusASR(AbstractCommunicator):
         retstr = [x for x in retstr if x != '']
         retstr = ' '.join(retstr)
         retstr = retstr.replace('<>', '')
-        retstr = retstr.translate(str.maketrans({'<': None, '"': None, '>': None, '/': None}))
+        retstr = retstr.translate(str.maketrans(
+            {'<': None, '"': None, '>': None, '/': None}))
         retstr = re.split('[ =]', retstr)
         dict = {}
         for i, val in enumerate(retstr):
@@ -171,8 +173,7 @@ class JuliusASR(AbstractCommunicator):
 
 
 class userUtteranceInfo:
-    
-    
+
     def __init__(self):
         self.us_time = None
         self.word = None
@@ -185,7 +186,7 @@ class userUtteranceInfo:
 
     def setWord(self, msg):
         self.word = msg
-        
+
     def setTime(self, time):
         self.us_time = time
 
@@ -204,6 +205,7 @@ def julius_test():
 
 def main():
     julius_test()
-    
+
+
 if __name__ == "__main__":
     main()

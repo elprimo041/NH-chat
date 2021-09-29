@@ -6,13 +6,11 @@ package RL {
     class extTextFea << (M,orchid) >>
     class makeModel << (M,orchid) >> 
     class predUI << (M,orchid) >>
-    package agent {
-        class Agent
-        class TrainedQlearningAgent
-    }
+    class TrainedQlearningAgent
     class DialogueEnv
     class Params
     class HistoryTheme
+    class util
 }
 
 package Interface {
@@ -59,8 +57,7 @@ abstract AbstractChat {
     save_log(fp)
     run()
     end()
-    process()
-    process_text()
+    process(is_text)
     get_user_utt()
     generate_sys_utt()
 }
@@ -174,7 +171,7 @@ class ManageTask {
     confirm_task(task_name, is_print)    
 }
 
-class "ManageTrun" as ManageTurn {
+class ManageTurn {
     debug
     asr
     response_time_no_word
@@ -211,8 +208,8 @@ class NHChat {
     __del__()
     set_debug(debug)
     print_debug(message)
-    process()
-    process_text()
+    process(is_text)
+    select_utterance(sys_utt, da, is_text)
     predict_dialogue(user_utt, sys_utt, da, user_start_time)
     predict_voice(file_name)
     predict_text(user_utt)
@@ -308,30 +305,10 @@ class MMDAgent {
     end()
 }
 
-class Agent {
-    Q
-    epsilon
-    reward_log
-    dialogue_log
-    max_n_exchg
-    __init__(epsilon)
-    policy(s, action, selection)
-    init_log()
-    append_log_reward(reward)
-    append_log_dialogue(exchgID, state, action, theme, impression, s_utte, u_utte)
-    show_reward_log(interval, episode, filename)
-    write_dialogue_log(filename)
-    saveR(filename)
-    saveQ(table, filename)
-    softmax(a, coef)
-}
-
 class TrainedQlearningAgent {
     Q
     __init__(filename)
     fillQ(env)
-    getUtteranceClassTheme(utterance)
-    conversation(env)
 }
 
 class DialogueEnv {
@@ -360,7 +337,6 @@ class DialogueEnv {
     getSpecificNoun(sentence)
     get_next_state(impression, sys_utterance, user_utterance)
     weightSpecificTheme(df)
-    softmax(array, coef)
     utterance_selection_softmax(chg_theme, theme, prob_actions mei_cmd)
 }
 
@@ -383,8 +359,8 @@ class extFaceFea {
 
 class extTextFea {
     is_in_speech(word_list, search_word)
-    ext_origin(user_id, base_data, pos_data)
-    ext_bow(user_id, base_data)
+    ext_origin(base_data, pos_data)
+    ext_bow(base_data)
     makeTmeta()
     makeFea(input_text)
 }
@@ -404,12 +380,15 @@ class predUI {
     changePredValueRange(fusion_pred)
 }
 
+class util {
+    softmax(array, coef)
+}
+
 AbstractCommunicator <|-- JuliusASR
 AbstractCommunicator <|-- MMDAgent
 
-Params <|-- Agent
+Params <|-- TrainedQlearningAgent
 Params <|-- HistoryTheme
-Agent <|-- TrainedQlearningAgent
 
 AbstractChat <|-- NHChat
 
@@ -455,5 +434,7 @@ NHChat::predict_text *-- predUI
 NHChat::predict_face *-- predUI
 NHChat::predict_face *-- extFaceFea
 NHChat::predict_text *-- extTextFea
+
+util::softmax *-- DialogueEnv
 
 @enduml
